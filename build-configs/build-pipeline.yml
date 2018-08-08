@@ -20,7 +20,7 @@ objects:
        jenkinsPipelineStrategy:
          jenkinsfilePath: pipelines/Jenkinsfile-Build
          env:
-         - name: "PROJECT_NAME"
+         - name: "NAMESPACE"
            value: ${NAMESPACE}
          - name: "APP_NAME"
            value: ${APP_NAME}

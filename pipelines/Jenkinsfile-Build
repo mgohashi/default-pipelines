@@ -67,11 +67,7 @@ pipeline {
                     submitter "aprovadores"
                     submitterParameter "USERNAME" 
                 }
-                steps {
-                  script {
-                    approved = true
-                  }
-                }
+                approved = true
               }
             }//if
             else {
@@ -80,11 +76,7 @@ pipeline {
           }//if
           if (approved) {
             stage('Image Build') {
-              steps {
-                script {
-                  echo "Image build..."
-                }
-              }
+              echo "Image build..."
             }
           }//if
         }//script

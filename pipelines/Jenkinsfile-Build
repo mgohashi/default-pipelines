@@ -103,19 +103,15 @@ pipeline {
           equals expected: true, actual: requiresPromotion
         }
       }
+      input {
+          message "Você gostaria de promover?"
+          ok "Sim, gostaria."
+          submitter "deployers"
+          submitterParameter "USERNAME" 
+      }
       steps {
         script {
-          input {
-              message "Você gostaria de promover?"
-              ok "Sim, gostaria."
-              submitter "deployers"
-              submitterParameter "USERNAME" 
-          }
-          steps {
-            script {
-              promote = true
-            }
-          }
+          promote = true
         }
       }//steps
     }//stage

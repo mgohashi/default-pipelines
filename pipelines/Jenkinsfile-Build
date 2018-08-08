@@ -78,6 +78,11 @@ pipeline {
           submitter "aprovadores"
           submitterParameter "USERNAME" 
       }
+      steps {
+        script {
+          approved = true
+        }
+      }
     }
     stage('Build Image') {
       when {

@@ -3,6 +3,7 @@ pipeline {
     string(name: 'PROJECT_NAME', description: 'What is the project name?')
     string(name: 'APP_NAME', description: 'What is the application name?')
   }
+  agent any
   stages {
     stage('Validate') {
       steps {

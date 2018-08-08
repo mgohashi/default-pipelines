@@ -65,17 +65,19 @@ pipeline {
       }//steps
     }//stage
     stage('Aprovar') {
+      agent none
       when {
         expression { requiresDeployment && requiresApproval }
       }
-      input {
-          message "Você gostaria de aprovar?"
-          ok "Sim, gostaria."
-          submitter "aprovadores"
-          submitterParameter "USERNAME" 
-      }
       steps {
-        echo 'Approvado!'
+        script {
+          def result = input {
+              message "Você gostaria de aprovar?"
+              ok "Sim, gostaria."
+              submitter "aprovadores"
+              submitterParameter "USERNAME" 
+          }
+        }
       }
     }
     stage('Build Image') {
@@ -89,17 +91,20 @@ pipeline {
       }//steps
     }//stage
     stage('Promover') {
+      agent none
       when {
         expression { requiresDeployment && requiresPromotion && !requiresDirectPromotion }
       }
-      input {
-          message "Você gostaria de promover?"
-          ok "Sim, gostaria."
-          submitter "deployers"
-          submitterParameter "USERNAME"
-      }
+      
       steps {
-        echo 'Promover!'
+        script {
+          def result = input {
+              message "Você gostaria de promover?"
+              ok "Sim, gostaria."
+              submitter "deployers"
+              submitterParameter "USERNAME"
+          }
+        }
       }
     }//stage
     stage('Promoting Image') {

@@ -51,7 +51,6 @@ pipeline {
     }
     stage('Deployment') {
       steps {
-        script {
           if (true) {
             stage('Aprovar') {
               input {
@@ -87,7 +86,6 @@ pipeline {
               }
             }
           }//if
-        }//script
       }//steps
     }//stage
   }//stages

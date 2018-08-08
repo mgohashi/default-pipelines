@@ -57,21 +57,34 @@ pipeline {
     stage('Deployment') {
       steps {
         script {
-          if (requiresApproval) {
-            stages {
-              stage('Aprovar') {
-                input {
-                    message "Você gostaria de aprovar?"
-                    ok "Sim, gostaria."
-                    submitter "aprovadores"
-                    submitterParameter "USERNAME" 
-                }
-                steps {
-                  script {
-                    echo "Olá aprovador ${USERNAME}"
+          if (requiresDeployment) {
+            if (requiresApproval) {
+              stages {
+                stage('Aprovar') {
+                  input {
+                      message "Você gostaria de aprovar?"
+                      ok "Sim, gostaria."
+                      submitter "aprovadores"
+                      submitterParameter "USERNAME" 
+                  }
+                  steps {
+                    script {
+                      echo "Olá aprovador ${USERNAME}"
+                    }
                   }
                 }
-              }
+                stage('Image Build') {
+                  steps {
+                    script {
+                      echo "Image build..."
+                    }
+                  }
+                }
+              }//stages
+            }//if
+          }//if
+          if (approved) {
+            stages {
               stage('Image Build') {
                 steps {
                   script {
@@ -79,28 +92,34 @@ pipeline {
                   }
                 }
               }
-              if (requiresPromotion) {
-                stages {
-                  stage('Promover') {
-                    input {
-                        message "Você gostaria de promover?"
-                        ok "Sim, gostaria."
-                        submitter "deployers"
-                        submitterParameter "USERNAME" 
-                    }
-                    steps {
-                      script {
-                        echo "Olá implantador ${USERNAME}"
-                      }
-                    }
-                  }
-                }
-              }//if
             }//stages
           }//if
         }//script
       }//steps
     }//stage
+    // stage('Promover') {
+    //   steps {
+    //     script {
+    //       if (requiresDeployment && requiresPromotion) {
+    //         stages {
+    //           stage('Promover') {
+    //             input {
+    //                 message "Você gostaria de promover?"
+    //                 ok "Sim, gostaria."
+    //                 submitter "deployers"
+    //                 submitterParameter "USERNAME" 
+    //             }
+    //             steps {
+    //               script {
+    //                 echo "Olá implantador ${USERNAME}"
+    //               }
+    //             }
+    //           }
+    //         }
+    //       }//if
+    //     }
+    //   }//steps
+    // }//stage
     stage('Finalizando') {
       steps {
         script {

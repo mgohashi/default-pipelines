@@ -1,4 +1,4 @@
-def requiresApproval = false
+def requiresApproval = true
 def requiresDeployment = false
 def requiresPromotion = false
 def requiresDirectPromotion = false

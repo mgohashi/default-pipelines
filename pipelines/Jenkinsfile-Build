@@ -66,10 +66,7 @@ pipeline {
     }//stage
     stage('Aprovar') {
       when {
-        allOf {
-          equals expected: true, actual: requiresDeployment
-          equals expected: true, actual: requiresApproval
-        }
+        expression { requiresDeployment && requiresApproval }
       }
       steps {
         input {
@@ -92,11 +89,7 @@ pipeline {
     }//stage
     stage('Promover') {
       when {
-        allOf {
-          equals expected: true, actual: requiresDeployment
-          equals expected: true, actual: requiresPromotion
-          equals expected: false, actual: requiresDirectPromotion
-        }
+        expression { requiresDeployment && requiresPromotion && !requiresDirectPromotion }
       }
       steps {
         input {

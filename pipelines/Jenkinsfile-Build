@@ -56,37 +56,43 @@ pipeline {
       }
     }
     stage('Deployment') {
+      when {
+        equals expected: true, actual: requiresDeployment
+      }
       steps {
         script {
-          def approved = false
-          if (requiresDeployment) {
-          }//if
-          if (approved) {
-            stage('Image Build') {
-              echo "Image build..."
-            }
-          }//if
-        }//script
+          echo "Executing deployment..."
+        }
       }//steps
     }//stage
     stage('Aprovar') {
+      when {
+        allOf {
+          equals expected: true, actual: requiresDeployment
+          equals expected: true, actual: requiresApproval
+        }
+      }
       steps {
         scripts {
-          if (requiresApproval) {
-            input {
-                message "Você gostaria de aprovar?"
-                ok "Sim, gostaria."
-                submitter "aprovadores"
-                submitterParameter "USERNAME" 
-            }
-            approved = true
-          }//if
-          else {
-            approved = true
+          input {
+              message "Você gostaria de aprovar?"
+              ok "Sim, gostaria."
+              submitter "aprovadores"
+              submitterParameter "USERNAME" 
           }
         }
       }
     }
+    stage('Build Image') {
+      when {
+        equals expected: true, actual: requiresDeployment
+      }
+      steps {
+        script {
+          echo "Building image..."
+        }
+      }//steps
+    }//stage
     // stage('Promover') {
     //   steps {
     //     script {

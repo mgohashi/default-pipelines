@@ -60,16 +60,18 @@ pipeline {
           def approved = false
           if (requiresDeployment) {
             if (requiresApproval) {
-              stage('Aprovar') {
-                input {
-                    message "Você gostaria de aprovar?"
-                    ok "Sim, gostaria."
-                    submitter "aprovadores"
-                    submitterParameter "USERNAME" 
-                }
-                steps {
-                  script {
-                    approved = true
+              stages {
+                stage('Aprovar') {
+                  input {
+                      message "Você gostaria de aprovar?"
+                      ok "Sim, gostaria."
+                      submitter "aprovadores"
+                      submitterParameter "USERNAME" 
+                  }
+                  steps {
+                    script {
+                      approved = true
+                    }
                   }
                 }
               }

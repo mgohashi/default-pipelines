@@ -50,45 +50,39 @@ pipeline {
       }
     }
     stage('Deployment') {
-      steps {
-        script {
-          if (true) {
-            stage('Aprovar') {
-              input {
-                  message "Você gostaria de aprovar?"
-                  ok "Sim, gostaria."
-                  submitter "aprovadores"
-                  submitterParameter "USERNAME" 
-              }
-              steps {
-                script {
-                  echo "Olá aprovador ${USERNAME}"
-                }
-              }
-            }
-            stage('Promover') {
-              input {
-                  message "Você gostaria de promover?"
-                  ok "Sim, gostaria."
-                  submitter "deployers"
-                  submitterParameter "USERNAME" 
-              }
-              steps {
-                script {
-                  echo "Olá implantador ${USERNAME}"
-                }
-              }
-            }
-            stage('Finalizando') {
-              steps {
-                script {
-                  echo "Deploying to production..."
-                }
-              }
-            }
-          }//if
-        }//scripts
-      } //steps
+      stage('Aprovar') {
+        input {
+            message "Você gostaria de aprovar?"
+            ok "Sim, gostaria."
+            submitter "aprovadores"
+            submitterParameter "USERNAME" 
+        }
+        steps {
+          script {
+            echo "Olá aprovador ${USERNAME}"
+          }
+        }
+      }
+      stage('Promover') {
+        input {
+            message "Você gostaria de promover?"
+            ok "Sim, gostaria."
+            submitter "deployers"
+            submitterParameter "USERNAME" 
+        }
+        steps {
+          script {
+            echo "Olá implantador ${USERNAME}"
+          }
+        }
+      }
+      stage('Finalizando') {
+        steps {
+          script {
+            echo "Deploying to production..."
+          }
+        }
+      }
     }//stage
   }//stages
 }//pipeline

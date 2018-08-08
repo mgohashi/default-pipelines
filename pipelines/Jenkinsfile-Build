@@ -9,7 +9,7 @@ pipeline {
       input {
           message "Should we continue?"
           ok "Yes, we should."
-          submitter "approvers"
+          submitter "aprovadores"
           submitterParameter "USERNAME" 
       }
       steps {

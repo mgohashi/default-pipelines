@@ -1,0 +1,96 @@
+# Criação do projeto
+
+Criação dos projetos no openshift
+
+#### Projeto *banestes-cicd-tools*
+
+`$ oc new project banestes-cicd-tools`
+
+##### Install latest jenkins
+
+[NOTE]
+====
+Import the latest image first.
+[source]
+----
+$ oc import-image jenkins:v3.9.33-3 -n openshift --from=registry.access.redhat.com/openshift3/jenkins-2-rhel7:v3.9.33-3 --confirm
+
+$ oc tag jenkins:v3.9.33-3 jenkins:latest -n openshift
+----
+====
+
+Execute the following command:
+
+----
+$ oc new-app jenkins-persistent -p MEMORY_LIMIT=2Gi -p VOLUME_CAPACITY=4Gi
+----
+
+##### Install Gogs
+
+----
+$ oc new-app postgresql-persistent \
+    --param POSTGRESQL_DATABASE=gogs  
+    --param POSTGRESQL_USER=gogs \
+    --param POSTGRESQL_PASSWORD=gogs \
+    --param VOLUME_CAPACITY=4Gi \
+    --param DATABASE_SERVICE_NAME=postgresql-gogs \
+    -lapp=Gogs
+
+$ oc new-app wkulhanek/gogs:11.53 -lapp=Gogs
+
+$ echo "apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: gogs-data
+    labels:
+        app: "Gogs"
+spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+        requests:
+            storage: 4Gi" | oc create -f -
+
+$ oc set volume dc/gogs --add \
+    --overwrite --name=gogs-volume-1 \
+    --mount-path=/data/ --type persistentVolumeClaim \
+    --claim-name=gogs-data
+----
+
+[NOTE]
+====
+The following `app.ini` in the following repo: `[put repo raw resource]`. Don't forget to change the route to the route pattern of your *OpenShift* installation.
+====
+
+----
+$ oc create configmap gogs --from-file=app.ini
+----
+
+#### Projeto *test-dev*
+
+----
+$ oc new-project test-dev
+----
+
+#### Projeto *test-hml*
+
+----
+$ oc new-project test-hml
+----
+
+#### Projeto *test-prd*
+
+----
+$ oc new-project test-prd
+----
+
+#### Configuring permissions
+
+----
+$ oc policy add-role-to-user admin system:serviceaccount:banestes-cicd-tools:jenkins -n test-dev
+
+$ oc policy add-role-to-user admin system:serviceaccount:banestes-cicd-tools:jenkins -n test-hml
+
+$ oc policy add-role-to-user admin system:serviceaccount:banestes-cicd-tools:jenkins -n test-prd
+----
+

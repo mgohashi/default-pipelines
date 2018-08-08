@@ -1,0 +1,20 @@
+pipeline {
+  parameters {
+    string(name: 'PROJECT_NAME', description: 'What is the project name?')
+    string(name: 'APP_NAME', description: 'What is the application name?')
+  }
+  agent {
+    node { label 'maven' }
+  }
+  options { skipStagesAfterUnstable() }
+  stages {
+    stage('Validate') {
+      steps {
+        script {
+          
+          
+        }
+      }
+    }
+  }
+}

@@ -2,8 +2,6 @@ def requiresDeployment = true
 def requiresApproval = false
 def requiresPromotion = true
 def requiresDirectPromotion = false
-def approved = false
-def promote = false
 
 pipeline {
   parameters {
@@ -73,22 +71,16 @@ pipeline {
           equals expected: true, actual: requiresApproval
         }
       }
-      steps {
-        script {
-          input {
-              message "Você gostaria de aprovar?"
-              ok "Sim, gostaria."
-              submitter "aprovadores"
-              submitterParameter "USERNAME" 
-          }
-          approved = true
-        }
+      input {
+          message "Você gostaria de aprovar?"
+          ok "Sim, gostaria."
+          submitter "aprovadores"
+          submitterParameter "USERNAME" 
       }
     }
     stage('Build Image') {
       when {
         equals expected: true, actual: requiresDeployment
-        equals expected: true, actual: approved
       }
       steps {
         script {
@@ -110,16 +102,10 @@ pipeline {
           submitter "deployers"
           submitterParameter "USERNAME"
       }
-      steps {
-        script {
-          promote = true
-        }
-      }//steps
     }//stage
     stage('Promoting Image') {
       when {
         equals expected: true, actual: requiresPromotion
-        equals expected: true, actual: promote
       }
       steps {
         script {

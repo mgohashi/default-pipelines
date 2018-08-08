@@ -6,7 +6,7 @@ pipeline {
   }
 
   environment {
-    REQUIRES_DEPLOYMENT = 'N'
+    REQUIRES_DEPLOYMENT = 'Y'
     REQUIRES_APPROVAL = 'Y'
     REQUIRES_PROMOTION = 'Y'
     REQUIRES_DIRECT_PROMOTION = 'N'

@@ -6,10 +6,10 @@ pipeline {
   }
 
   environment {
-    REQUIRES_DEPLOYMENT = 'Y'
-    REQUIRES_APPROVAL = 'N'
+    REQUIRES_DEPLOYMENT = 'N'
+    REQUIRES_APPROVAL = 'Y'
     REQUIRES_PROMOTION = 'Y'
-    REQUIRES_DIRECT_PROMOTION = 'Y'
+    REQUIRES_DIRECT_PROMOTION = 'N'
   }
 
   agent any

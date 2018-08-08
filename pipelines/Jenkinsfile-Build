@@ -5,16 +5,29 @@ pipeline {
   }
   agent any
   stages {
-    stage('Validate') {
+    stage('Aprovar') {
       input {
-          message "Should we continue?"
-          ok "Yes, we should."
+          message "Você gostaria de aprovar?"
+          ok "Sim, gostaria."
           submitter "aprovadores"
           submitterParameter "USERNAME" 
       }
       steps {
         script {
-          echo "HELLO ${USERNAME}"
+          echo "Olá aprovador ${USERNAME}"
+        }
+      }
+    }
+    stage('Implantar') {
+      input {
+          message "Você gostaria de implantar?"
+          ok "Sim, gostaria."
+          submitter "deployers"
+          submitterParameter "USERNAME" 
+      }
+      steps {
+        script {
+          echo "Olá implantador ${USERNAME}"
         }
       }
     }

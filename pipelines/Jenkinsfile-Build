@@ -1,7 +1,7 @@
 def requiresDeployment = true
-def requiresApproval = true
+def requiresApproval = false
 def requiresPromotion = true
-def requiresDirectPromotion = true
+def requiresDirectPromotion = false
 def approved = false
 def promote = false
 

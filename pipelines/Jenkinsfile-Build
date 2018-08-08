@@ -67,7 +67,7 @@ pipeline {
     stage('Aprovar') {
       agent none
       when {
-        expression { requiresDeployment && requiresApproval }
+        expression { return requiresDeployment && requiresApproval }
       }
       steps {
         script {
@@ -93,7 +93,7 @@ pipeline {
     stage('Promover') {
       agent none
       when {
-        expression { requiresDeployment && requiresPromotion && !requiresDirectPromotion }
+        expression { return requiresDeployment && requiresPromotion && !requiresDirectPromotion }
       }
       
       steps {

@@ -93,15 +93,16 @@ pipeline {
             }
           }
         }
-        stage('Finalizando') {
-          steps {
-            script {
-              echo "Deploying to production..."
-            }
-          }
-        }
+        
         */
       }//stages
     }//stage
+    stage('Finalizando') {
+      steps {
+        script {
+          echo "Deploying to production..."
+        }
+      }
+    }
   }//stages
 }//pipeline

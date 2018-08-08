@@ -75,6 +75,7 @@ pipeline {
           submitterParameter "USERNAME" 
       }
       steps {
+        echo 'Approvado!'
       }
     }
     stage('Build Image') {
@@ -98,6 +99,7 @@ pipeline {
           submitterParameter "USERNAME"
       }
       steps {
+        echo 'Promover!'
       }
     }//stage
     stage('Promoting Image') {

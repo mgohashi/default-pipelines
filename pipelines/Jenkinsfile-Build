@@ -1,14 +1,17 @@
-def requiresDeployment = true
-def requiresApproval = false
-def requiresPromotion = true
-def requiresDirectPromotion = false
-
 pipeline {
   parameters {
     string(name: 'NAMESPACE', description: 'What is the project name?')
     string(name: 'APP_NAME', description: 'What is the application name?')
     string(name: 'GIT_URL', description: 'What is the Git repository?')
   }
+
+  environment {
+    REQUIRES_DEPLOYMENT = 'Y'
+    REQUIRES_APPROVAL = 'N'
+    REQUIRES_PROMOTION = 'Y'
+    REQUIRES_DIRECT_PROMOTION = 'N'
+  }
+
   agent any
   stages {
     stage('Checkout') {
@@ -56,7 +59,7 @@ pipeline {
     }
     stage('Deployment') {
       when {
-        equals expected: true, actual: requiresDeployment
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
       }
       steps {
         script {
@@ -68,8 +71,8 @@ pipeline {
       agent none
       when {
         allOf { 
-          equals expected: true, actual: requiresDeployment
-          equals expected: true, actual: requiresApproval 
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+          environment name: 'REQUIRES_APPROVAL', value: 'Y'
         }
       }
       steps {
@@ -85,7 +88,7 @@ pipeline {
     }
     stage('Build Image') {
       when {
-        equals expected: true, actual: requiresDeployment
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
       }
       steps {
         script {
@@ -97,12 +100,11 @@ pipeline {
       agent none
       when {
         allOf { 
-          equals expected: true, actual: requiresDeployment 
-          equals expected: true, actual: requiresPromotion
-          equals expected: false, actual: requiresDirectPromotion 
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+          environment name: 'REQUIRES_PROMOTION', value: 'Y'
+          environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
         }
       }
-      
       steps {
         script {
           def result = input(
@@ -116,7 +118,7 @@ pipeline {
     }//stage
     stage('Promoting Image') {
       when {
-        equals expected: true, actual: requiresPromotion
+        environment name: 'REQUIRES_PROMOTION', value: 'Y'
       }
       steps {
         script {

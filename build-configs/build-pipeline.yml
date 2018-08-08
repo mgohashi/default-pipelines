@@ -15,10 +15,10 @@ objects:
    spec:
      source:
        git:
-         uri: "http://gogs-banestes-cicd-tools.apps.rh-consulting-br.com/banestes/default-pipelines/pipelines"
+         uri: "http://gogs-banestes-cicd-tools.apps.rh-consulting-br.com/banestes/default-pipelines"
      strategy:
        jenkinsPipelineStrategy:
-         jenkinsfilePath: Jenkinsfile-Build
+         jenkinsfilePath: pipelines/Jenkinsfile-Build
          env:
          - name: "PROJECT_NAME"
            value: ${NAMESPACE}

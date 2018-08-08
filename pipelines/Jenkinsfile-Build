@@ -87,6 +87,7 @@ pipeline {
     stage('Build Image') {
       when {
         equals expected: true, actual: requiresDeployment
+        equals expected: true, actual: approved
       }
       steps {
         script {

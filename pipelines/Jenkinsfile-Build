@@ -118,6 +118,7 @@ pipeline {
     }//stage
     stage('Promoting Image') {
       when {
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
         environment name: 'REQUIRES_PROMOTION', value: 'Y'
       }
       steps {

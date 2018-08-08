@@ -1,10 +1,18 @@
 pipeline {
   parameters {
-    string(name: 'PROJECT_NAME', description: 'What is the project name?')
+    string(name: 'NAMESPACE', description: 'What is the project name?')
     string(name: 'APP_NAME', description: 'What is the application name?')
   }
   agent any
   stages {
+    stage('Init') {
+      steps {
+        script {
+          echo "NAMESPACE=${NAMESPACE}"
+          echo "APP_NAME=${APP_NAME}"
+        }
+      }
+    }
     stage('Aprovar') {
       input {
           message "Você gostaria de aprovar?"

@@ -18,9 +18,9 @@ pipeline {
         }
       }
     }
-    stage('Implantar') {
+    stage('Promover') {
       input {
-          message "Você gostaria de implantar?"
+          message "Você gostaria de promover?"
           ok "Sim, gostaria."
           submitter "deployers"
           submitterParameter "USERNAME" 

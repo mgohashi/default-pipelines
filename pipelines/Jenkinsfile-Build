@@ -6,12 +6,11 @@ pipeline {
   agent {
     node { label 'maven' }
   }
-  options { skipStagesAfterUnstable() }
   stages {
     stage('Validate') {
       steps {
         script {
-          
+          echo "Test"
         }
       }
     }

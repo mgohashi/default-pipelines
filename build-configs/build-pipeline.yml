@@ -1,21 +1,24 @@
 apiVersion: v1
 kind: Template
 metadata:
-    tags: instant-app,jenkins
-  name: dev-hml-pipeline
+  annotations:
+    description: Build Pipeline
+    iconClass: icon-jboss
+    tags: java,springboot,fis,eap,secret,build
+  name: build-pipeline
 objects:
  - apiVersion: v1
    kind: "BuildConfig"
    apiVersion: "v1"
    metadata:
-     name: "dev-hml-pipeline"
+     name: "${APP_NAME}"
    spec:
      source:
        git:
          uri: "http://gogs-banestes-cicd-tools.apps.rh-consulting-br.com/banestes/default-pipelines/pipelines"
      strategy:
        jenkinsPipelineStrategy:
-         jenkinsfilePath: Jenkinsfile-Dev-Hml
+         jenkinsfilePath: Jenkinsfile-Build
          env:
          - name: "PROJECT_NAME"
            value: ${NAMESPACE}

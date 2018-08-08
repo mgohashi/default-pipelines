@@ -25,8 +25,8 @@ pipeline {
     stage('Configurar Build') {
       steps {
         script {
-          echo "NAMESPACE=${NAMESPACE}"
-          echo "APP_NAME=${APP_NAME}"
+          def branch = env.GIT_BRANCH
+          echo "${branch}"
         }
       }
     }

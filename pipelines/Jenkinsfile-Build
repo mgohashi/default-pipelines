@@ -3,6 +3,7 @@ def requiresApproval = true
 def requiresPromotion = false
 def requiresDirectPromotion = false
 def approved = false
+def promote = false
 
 pipeline {
   parameters {
@@ -95,29 +96,40 @@ pipeline {
         }
       }//steps
     }//stage
-    // stage('Promover') {
-    //   steps {
-    //     script {
-    //       if (requiresDeployment && requiresPromotion) {
-    //         stages {
-    //           stage('Promover') {
-    //             input {
-    //                 message "Você gostaria de promover?"
-    //                 ok "Sim, gostaria."
-    //                 submitter "deployers"
-    //                 submitterParameter "USERNAME" 
-    //             }
-    //             steps {
-    //               script {
-    //                 echo "Olá implantador ${USERNAME}"
-    //               }
-    //             }
-    //           }
-    //         }
-    //       }//if
-    //     }
-    //   }//steps
-    // }//stage
+    stage('Promover') {
+      when {
+        allOf {
+          equals expected: true, actual: requiresDeployment
+          equals expected: true, actual: requiresPromotion
+        }
+      }
+      steps {
+        script {
+          input {
+              message "Você gostaria de promover?"
+              ok "Sim, gostaria."
+              submitter "deployers"
+              submitterParameter "USERNAME" 
+          }
+          steps {
+            script {
+              promote = true
+            }
+          }
+        }
+      }//steps
+    }//stage
+    stage('Promoting Image') {
+      when {
+        equals expected: true, actual: requiresPromotion
+        equals expected: true, actual: promote
+      }
+      steps {
+        script {
+          echo "Promoting image..."
+        }
+      }//steps
+    }//stage
     stage('Finalizando') {
       steps {
         script {

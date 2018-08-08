@@ -1,7 +1,7 @@
 def requiresDeployment = true
 def requiresApproval = true
 def requiresPromotion = true
-def requiresDirectPromotion = false
+def requiresDirectPromotion = true
 def approved = false
 def promote = false
 
@@ -101,6 +101,7 @@ pipeline {
         allOf {
           equals expected: true, actual: requiresDeployment
           equals expected: true, actual: requiresPromotion
+          equals expected: false, actual: requiresDirectPromotion
         }
       }
       input {

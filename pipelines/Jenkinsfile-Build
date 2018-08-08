@@ -72,7 +72,6 @@ pipeline {
                   }
                 }
               }
-              /*
               stage('Image Build') {
                 steps {
                   script {
@@ -80,20 +79,23 @@ pipeline {
                   }
                 }
               }
-              stage('Promover') {
-                input {
-                    message "Você gostaria de promover?"
-                    ok "Sim, gostaria."
-                    submitter "deployers"
-                    submitterParameter "USERNAME" 
-                }
-                steps {
-                  script {
-                    echo "Olá implantador ${USERNAME}"
+              if (requiresPromotion) {
+                stages {
+                  stage('Promover') {
+                    input {
+                        message "Você gostaria de promover?"
+                        ok "Sim, gostaria."
+                        submitter "deployers"
+                        submitterParameter "USERNAME" 
+                    }
+                    steps {
+                      script {
+                        echo "Olá implantador ${USERNAME}"
+                      }
+                    }
                   }
                 }
-              }
-              */
+              }//if
             }//stages
           }//if
         }//script

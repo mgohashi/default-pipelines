@@ -1,5 +1,5 @@
-def requiresApproval = true
-def requiresDeployment = false
+def requiresDeployment = true
+def requiresApproval = false
 def requiresPromotion = false
 def requiresDirectPromotion = false
 

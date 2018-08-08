@@ -67,7 +67,11 @@ pipeline {
                     submitter "aprovadores"
                     submitterParameter "USERNAME" 
                 }
-                approved = true
+                steps {
+                  script {
+                    approved = true
+                  }
+                }
               }
             }//if
             else {

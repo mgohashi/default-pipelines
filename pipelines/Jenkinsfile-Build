@@ -3,8 +3,8 @@ pipeline {
     string(name: 'NAMESPACE', description: 'What is the Namespace name?')
     string(name: 'APP_NAME', description: 'What is the application name?')
     string(name: 'GIT_URL', description: 'What is the Git repository?')
-    string(name: 'SECRET', description: 'What is the Secret name?')
-    string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
+    //string(name: 'SECRET', description: 'What is the Secret name?')
+    //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
   }
   environment {
     REQUIRES_DEPLOYMENT = 'Y'

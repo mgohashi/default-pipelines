@@ -57,6 +57,7 @@ pipeline {
     stage('Deployment') {
       steps {
         script {
+          def approved = false
           if (requiresDeployment) {
             if (requiresApproval) {
               stages {
@@ -69,19 +70,15 @@ pipeline {
                   }
                   steps {
                     script {
-                      echo "Olá aprovador ${USERNAME}"
-                    }
-                  }
-                }
-                stage('Image Build') {
-                  steps {
-                    script {
-                      echo "Image build..."
+                      approved = true
                     }
                   }
                 }
               }//stages
             }//if
+            else {
+              approved = true
+            }
           }//if
           if (approved) {
             stages {

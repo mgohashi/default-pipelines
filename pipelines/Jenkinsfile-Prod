@@ -1,0 +1,12 @@
+pipeline {
+  parameters {
+    string(name: 'NAMESPACE', description: 'What is the Namespace name?')
+    string(name: 'APP_NAME', description: 'What is the Application name?')
+  }
+  environment {
+  }
+  agent any
+  stages {
+    
+  }//stages
+}//pipeline

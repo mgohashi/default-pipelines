@@ -1,6 +1,6 @@
 pipeline {
   parameters {
-    string(name: 'NAMESPACE', description: 'What is the project name?')
+    string(name: 'NAMESPACE', description: 'What is the Namespace name?')
     string(name: 'APP_NAME', description: 'What is the application name?')
     string(name: 'GIT_URL', description: 'What is the Git repository?')
     string(name: 'SECRET', description: 'What is the Secret name?')
@@ -8,8 +8,8 @@ pipeline {
   }
   environment {
     REQUIRES_DEPLOYMENT = 'Y'
-    REQUIRES_APPROVAL = 'Y'
-    REQUIRES_PROMOTION = 'Y'
+    REQUIRES_APPROVAL = 'N'
+    REQUIRES_PROMOTION = 'N'
     REQUIRES_DIRECT_PROMOTION = 'N'
   }
   agent any
@@ -18,6 +18,7 @@ pipeline {
       steps {
         script {
           echo "Checkout source code from ${GIT_URL}..."
+          sh 'printenv'
         }
       }
     }

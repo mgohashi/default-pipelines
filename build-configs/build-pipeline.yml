@@ -24,6 +24,8 @@ objects:
            value: ${NAMESPACE}
          - name: "APP_NAME"
            value: ${APP_NAME}
+         - name: "GIT_URL"
+           value: ${GIT_URL}
      output:
        to:
          kind: "ImageStreamTag"
@@ -35,3 +37,6 @@ parameters:
 - description: Namespace
   displayName: Namespace
   name: NAMESPACE
+- description: Git URL
+  displayName: Git URL
+  name: GIT_URL

@@ -13,7 +13,7 @@ pipeline {
         }
       }
     }
-    stage('Configurar Build')
+    stage('Configurar Build') {
       steps {
         script {
           echo "NAMESPACE=${NAMESPACE}"

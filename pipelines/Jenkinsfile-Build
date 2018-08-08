@@ -38,8 +38,8 @@ pipeline {
           echo "Olá implantador ${USERNAME}"
         }
       }
-    },
-    stage('') {
+    }
+    stage('Finalizando') {
       steps {
         script {
           echo "Deploying to production..."

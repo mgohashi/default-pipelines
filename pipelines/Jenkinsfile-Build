@@ -6,9 +6,15 @@ pipeline {
   agent any
   stages {
     stage('Validate') {
+      input {
+          message "Should we continue?"
+          ok "Yes, we should."
+          submitter "approvers"
+          submitterParameter "USERNAME" 
+      }
       steps {
         script {
-          echo "Test"
+          echo "HELLO ${USERNAME}"
         }
       }
     }

@@ -72,15 +72,11 @@ pipeline {
           equals expected: true, actual: requiresApproval
         }
       }
-      steps {
-        scripts {
-          input {
-              message "Você gostaria de aprovar?"
-              ok "Sim, gostaria."
-              submitter "aprovadores"
-              submitterParameter "USERNAME" 
-          }
-        }
+      input {
+          message "Você gostaria de aprovar?"
+          ok "Sim, gostaria."
+          submitter "aprovadores"
+          submitterParameter "USERNAME" 
       }
     }
     stage('Build Image') {

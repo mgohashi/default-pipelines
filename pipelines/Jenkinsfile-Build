@@ -71,12 +71,12 @@ pipeline {
       }
       steps {
         script {
-          def result = input {
-              message "Você gostaria de aprovar?"
-              ok "Sim, gostaria."
-              submitter "aprovadores"
-              submitterParameter "USERNAME" 
-          }
+          def result = input(
+              message: "Você gostaria de aprovar?",
+              ok: "Sim, gostaria.",
+              submitter: "aprovadores",
+              submitterParameter: "USERNAME" 
+          )
         }
       }
     }
@@ -98,12 +98,12 @@ pipeline {
       
       steps {
         script {
-          def result = input {
-              message "Você gostaria de promover?"
-              ok "Sim, gostaria."
-              submitter "deployers"
-              submitterParameter "USERNAME"
-          }
+          def result = input(
+              message: "Você gostaria de promover?",
+              ok: "Sim, gostaria.",
+              submitter: "deployers",
+              submitterParameter: "USERNAME"
+          )
         }
       }
     }//stage

@@ -2,6 +2,7 @@ def requiresDeployment = true
 def requiresApproval = true
 def requiresPromotion = false
 def requiresDirectPromotion = false
+def approved = false
 
 pipeline {
   parameters {
@@ -59,26 +60,6 @@ pipeline {
         script {
           def approved = false
           if (requiresDeployment) {
-            if (requiresApproval) {
-              stages {
-                stage('Aprovar') {
-                  input {
-                      message "Você gostaria de aprovar?"
-                      ok "Sim, gostaria."
-                      submitter "aprovadores"
-                      submitterParameter "USERNAME" 
-                  }
-                  steps {
-                    script {
-                      approved = true
-                    }
-                  }
-                }
-              }
-            }//if
-            else {
-              approved = true
-            }
           }//if
           if (approved) {
             stage('Image Build') {
@@ -88,6 +69,24 @@ pipeline {
         }//script
       }//steps
     }//stage
+    stage('Aprovar') {
+      steps {
+        scripts {
+          if (requiresApproval) {
+            input {
+                message "Você gostaria de aprovar?"
+                ok "Sim, gostaria."
+                submitter "aprovadores"
+                submitterParameter "USERNAME" 
+            }
+            approved = true
+          }//if
+          else {
+            approved = true
+          }
+        }
+      }
+    }
     // stage('Promover') {
     //   steps {
     //     script {

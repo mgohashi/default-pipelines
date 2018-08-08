@@ -68,13 +68,13 @@ pipeline {
       when {
         expression { requiresDeployment && requiresApproval }
       }
+      input {
+          message "Você gostaria de aprovar?"
+          ok "Sim, gostaria."
+          submitter "aprovadores"
+          submitterParameter "USERNAME" 
+      }
       steps {
-        input {
-            message "Você gostaria de aprovar?"
-            ok "Sim, gostaria."
-            submitter "aprovadores"
-            submitterParameter "USERNAME" 
-        }
       }
     }
     stage('Build Image') {
@@ -91,13 +91,13 @@ pipeline {
       when {
         expression { requiresDeployment && requiresPromotion && !requiresDirectPromotion }
       }
+      input {
+          message "Você gostaria de promover?"
+          ok "Sim, gostaria."
+          submitter "deployers"
+          submitterParameter "USERNAME"
+      }
       steps {
-        input {
-            message "Você gostaria de promover?"
-            ok "Sim, gostaria."
-            submitter "deployers"
-            submitterParameter "USERNAME"
-        }
       }
     }//stage
     stage('Promoting Image') {

@@ -67,7 +67,10 @@ pipeline {
     stage('Aprovar') {
       agent none
       when {
-        expression { return requiresDeployment && requiresApproval }
+        allOf { 
+          equals expected: true, actual: requiresDeployment
+          equals expected: true, actual: requiresApproval 
+        }
       }
       steps {
         script {
@@ -93,7 +96,11 @@ pipeline {
     stage('Promover') {
       agent none
       when {
-        expression { return requiresDeployment && requiresPromotion && !requiresDirectPromotion }
+        allOf { 
+          equals expected: true, actual: requiresDeployment 
+          equals expected: true, actual: requiresPromotion
+          equals expected: false, actual: requiresDirectPromotion 
+        }
       }
       
       steps {

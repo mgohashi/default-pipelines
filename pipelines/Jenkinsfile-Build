@@ -1,6 +1,6 @@
 def requiresDeployment = true
 def requiresApproval = true
-def requiresPromotion = false
+def requiresPromotion = true
 def requiresDirectPromotion = false
 def approved = false
 def promote = false
@@ -133,7 +133,7 @@ pipeline {
     stage('Finalizando') {
       steps {
         script {
-          echo "Deploying to production..."
+          echo "Finalizing..."
         }
       }
     }

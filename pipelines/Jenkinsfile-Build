@@ -73,13 +73,13 @@ pipeline {
           equals expected: true, actual: requiresApproval
         }
       }
+      input {
+          message "Você gostaria de aprovar?"
+          ok "Sim, gostaria."
+          submitter "aprovadores"
+          submitterParameter "USERNAME" 
+      }
       steps {
-        input {
-            message "Você gostaria de aprovar?"
-            ok "Sim, gostaria."
-            submitter "aprovadores"
-            submitterParameter "USERNAME" 
-        }
         script {
           approved = true
         }
@@ -104,13 +104,13 @@ pipeline {
           equals expected: false, actual: requiresDirectPromotion
         }
       }
+      input {
+          message "Você gostaria de promover?"
+          ok "Sim, gostaria."
+          submitter "deployers"
+          submitterParameter "USERNAME"
+      }
       steps {
-        input {
-            message "Você gostaria de promover?"
-            ok "Sim, gostaria."
-            submitter "deployers"
-            submitterParameter "USERNAME" 
-        }
         script {
           promote = true
         }

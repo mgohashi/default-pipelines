@@ -60,36 +60,32 @@ pipeline {
           def approved = false
           if (requiresDeployment) {
             if (requiresApproval) {
-              stages {
-                stage('Aprovar') {
-                  input {
-                      message "Você gostaria de aprovar?"
-                      ok "Sim, gostaria."
-                      submitter "aprovadores"
-                      submitterParameter "USERNAME" 
-                  }
-                  steps {
-                    script {
-                      approved = true
-                    }
+              stage('Aprovar') {
+                input {
+                    message "Você gostaria de aprovar?"
+                    ok "Sim, gostaria."
+                    submitter "aprovadores"
+                    submitterParameter "USERNAME" 
+                }
+                steps {
+                  script {
+                    approved = true
                   }
                 }
-              }//stages
+              }
             }//if
             else {
               approved = true
             }
           }//if
           if (approved) {
-            stages {
-              stage('Image Build') {
-                steps {
-                  script {
-                    echo "Image build..."
-                  }
+            stage('Image Build') {
+              steps {
+                script {
+                  echo "Image build..."
                 }
               }
-            }//stages
+            }
           }//if
         }//script
       }//steps

@@ -1,0 +1,158 @@
+pipeline {
+  parameters {
+    string(name: 'NAMESPACE', description: 'What is the Namespace name?')
+    string(name: 'APP_NAME', description: 'What is the application name?')
+    string(name: 'GIT_URL', description: 'What is the Git repository?')
+    //string(name: 'SECRET', description: 'What is the Secret name?')
+    //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
+  }
+
+  environment {
+    // Desenvolvimento
+    // REQUIRES_BUILD = 'Y'
+    // REQUIRES_DEPLOYMENT = 'Y'
+    // REQUIRES_APPROVAL = 'N'
+    // REQUIRES_PROMOTION = 'N'
+    // REQUIRES_DIRECT_PROMOTION = 'N'
+
+    // Homologação
+    REQUIRES_BUILD = 'Y'
+    REQUIRES_DEPLOYMENT = 'Y'
+    REQUIRES_APPROVAL = 'Y'
+    REQUIRES_PROMOTION = 'Y'
+    REQUIRES_DIRECT_PROMOTION = 'N'
+
+    // Hotfix
+    // REQUIRES_BUILD = 'Y'
+    // REQUIRES_DEPLOYMENT = 'Y'
+    // REQUIRES_APPROVAL = 'Y'
+    // REQUIRES_PROMOTION = 'Y'
+    // REQUIRES_DIRECT_PROMOTION = 'Y'
+  }
+
+  agent any
+  
+  stages {
+    stage('Checkout') {
+      steps {
+        script {
+          echo "Checkout source code from ${GIT_URL}..."
+          // sh 'printenv'
+        }
+      }
+    }
+    stage('Configurar Build') {
+      steps {
+        script {
+          def branch = env.GIT_BRANCH
+          echo "${branch}"
+        }
+      }
+    }
+    stage('Build') {
+      steps {
+        script {
+          echo "Application build..."
+        }
+      }
+    }
+    stage('Unit Tests') {
+      steps {
+        script {
+          echo "Running unit tests..."
+        }
+      }
+    }
+    stage('Static Analysis') {
+      steps {
+        script {
+          echo "Running analysis..."
+        }
+      }
+    }
+    stage('Export Nexus') {
+      steps {
+        script {
+          echo "Exporting to nexus..."
+        }
+      }
+    }
+    stage('Deployment') {
+      when {
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Executing deployment..."
+        }
+      }//steps
+    }//stage
+    stage('Aprovar') {
+      agent none
+      when {
+        allOf { 
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+          environment name: 'REQUIRES_APPROVAL', value: 'Y'
+        }
+      }
+      steps {
+        script {
+          input(
+              message: "Você gostaria de aprovar?",
+              ok: "Sim, gostaria.",
+              submitter: "aprovadores",
+              submitterParameter: "USERNAME" 
+          )
+        }
+      }//steps
+    }//stage
+    stage('Build Image') {
+      when {
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Building image..."
+        }
+      }//steps
+    }//stage
+    stage('Promover') {
+      agent none
+      when {
+        allOf { 
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+          environment name: 'REQUIRES_PROMOTION', value: 'Y'
+          environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
+        }
+      }
+      steps {
+        script {
+          input(
+              message: "Você gostaria de promover?",
+              ok: "Sim, gostaria.",
+              submitter: "deployers",
+              submitterParameter: "USERNAME"
+          )
+        }
+      }//steps
+    }//stage
+    stage('Promoting Image') {
+      when {
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        environment name: 'REQUIRES_PROMOTION', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Promoting image..."
+        }
+      }//steps
+    }//stage
+    stage('Finalizando') {
+      steps {
+        script {
+          echo "Finalizing..."
+        }
+      }
+    }
+  }//stages
+}//pipeline

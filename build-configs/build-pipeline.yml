@@ -18,7 +18,7 @@ objects:
          uri: "http://gogs-banestes-cicd-tools.apps.rh-consulting-br.com/banestes/default-pipelines"
      strategy:
        jenkinsPipelineStrategy:
-         jenkinsfilePath: pipelines/Jenkinsfile-Build
+         jenkinsfilePath: ${JENKINS_FILE}
          env:
          - name: "NAMESPACE"
            value: ${NAMESPACE}
@@ -40,3 +40,6 @@ parameters:
 - description: Git URL
   displayName: Git URL
   name: GIT_URL
+- description: Jenkins Files
+  displayName: Jenkins Files
+  name: JENKINS_FILE

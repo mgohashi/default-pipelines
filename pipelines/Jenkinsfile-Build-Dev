@@ -37,8 +37,8 @@ pipeline {
       steps {
         script {
           echo "Checkout source code from ${GIT_URL}..."
+          git '${GIT_URL}'
           sh 'printenv'
-          checkout 
         }
       }
     }

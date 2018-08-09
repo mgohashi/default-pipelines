@@ -22,7 +22,7 @@ pipeline {
           input(
               message: "Você gostaria de aprovar?",
               ok: "Sim, gostaria.",
-              submitter: "aprovadores",
+              submitter: "deployers",
               submitterParameter: "USERNAME" 
           )
         }

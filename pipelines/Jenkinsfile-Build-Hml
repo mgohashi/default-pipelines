@@ -109,6 +109,7 @@ pipeline {
     stage('Deploy') {
       when {
         environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
       }
       steps {
         script {

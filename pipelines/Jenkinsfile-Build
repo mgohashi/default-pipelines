@@ -6,12 +6,28 @@ pipeline {
     //string(name: 'SECRET', description: 'What is the Secret name?')
     //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
   }
-  
+
   environment {
+    // Desenvolvimento
+    REQUIRES_BUILD = 'Y'
     REQUIRES_DEPLOYMENT = 'Y'
     REQUIRES_APPROVAL = 'N'
     REQUIRES_PROMOTION = 'N'
     REQUIRES_DIRECT_PROMOTION = 'N'
+
+    // Homologação
+    // REQUIRES_BUILD = 'Y'
+    // REQUIRES_DEPLOYMENT = 'Y'
+    // REQUIRES_APPROVAL = 'Y'
+    // REQUIRES_PROMOTION = 'Y'
+    // REQUIRES_DIRECT_PROMOTION = 'N'
+
+    // Hotfix
+    // REQUIRES_BUILD = 'Y'
+    // REQUIRES_DEPLOYMENT = 'Y'
+    // REQUIRES_APPROVAL = 'Y'
+    // REQUIRES_PROMOTION = 'Y'
+    // REQUIRES_DIRECT_PROMOTION = 'Y'
   }
 
   agent any
@@ -21,7 +37,7 @@ pipeline {
       steps {
         script {
           echo "Checkout source code from ${GIT_URL}..."
-          sh 'printenv'
+          // sh 'printenv'
         }
       }
     }

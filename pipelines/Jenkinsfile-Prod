@@ -4,9 +4,27 @@ pipeline {
     string(name: 'APP_NAME', description: 'What is the Application name?')
   }
   environment {
+    REQUIRES_APPROVAL = 'Y'
   }
   agent any
   stages {
-    
+    stage('Import HML Image') {
+      steps {
+        script {
+          echo "Importing image..."
+          // sh 'printenv'
+        }
+      }
+    }
+    stage('Executar Deploy') {
+      when {
+        environment name: 'REQUIRES_APPROVAL', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Promoting image..."
+        }
+      }
+    }
   }//stages
 }//pipeline

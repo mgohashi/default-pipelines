@@ -6,13 +6,16 @@ pipeline {
     //string(name: 'SECRET', description: 'What is the Secret name?')
     //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
   }
+  
   environment {
     REQUIRES_DEPLOYMENT = 'Y'
     REQUIRES_APPROVAL = 'N'
     REQUIRES_PROMOTION = 'N'
     REQUIRES_DIRECT_PROMOTION = 'N'
   }
+
   agent any
+  
   stages {
     stage('Checkout') {
       steps {
@@ -85,8 +88,8 @@ pipeline {
               submitterParameter: "USERNAME" 
           )
         }
-      }
-    }
+      }//steps
+    }//stage
     stage('Build Image') {
       when {
         environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
@@ -115,7 +118,7 @@ pipeline {
               submitterParameter: "USERNAME"
           )
         }
-      }
+      }//steps
     }//stage
     stage('Promoting Image') {
       when {

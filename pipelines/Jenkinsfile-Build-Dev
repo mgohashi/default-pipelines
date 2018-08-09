@@ -46,7 +46,18 @@ pipeline {
       steps {
         script {
           def branch = env.GIT_BRANCH
-          echo "${branch}"
+
+          echo "Branch = ${branch}"
+
+          if (branch == 'origin/master') {
+            echo 'Env = Production'
+          } else if (branch.startsWith('release/')) {
+            echo 'Env = Release'
+          } else if (branch.startWith('hotfix/')) {
+            echo 'Env = Hotfix'
+          } else if (branch.startWith('develop/')) {
+            echo 'Env = Develop'
+          }
         }
       }
     }

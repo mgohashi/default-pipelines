@@ -77,13 +77,13 @@ pipeline {
         }
       }
     }
-    stage('Deployment') {
+    stage('Build Image') {
       when {
         environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
       }
       steps {
         script {
-          echo "Executing deployment..."
+          echo "Building image..."
         }
       }//steps
     }//stage
@@ -103,16 +103,6 @@ pipeline {
               submitter: "aprovadores",
               submitterParameter: "USERNAME" 
           )
-        }
-      }//steps
-    }//stage
-    stage('Build Image') {
-      when {
-        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Building image..."
         }
       }//steps
     }//stage

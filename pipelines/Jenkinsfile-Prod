@@ -16,6 +16,18 @@ pipeline {
         }
       }
     }
+    stage('Aproval') {
+      steps {
+        script {
+          input(
+              message: "Você gostaria de aprovar?",
+              ok: "Sim, gostaria.",
+              submitter: "aprovadores",
+              submitterParameter: "USERNAME" 
+          )
+        }
+      }
+    }
     stage('Executar Deploy') {
       when {
         environment name: 'REQUIRES_APPROVAL', value: 'Y'

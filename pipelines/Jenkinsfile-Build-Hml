@@ -123,7 +123,7 @@ pipeline {
         allOf { 
           environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
           environment name: 'REQUIRES_PROMOTION', value: 'Y'
-          environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
+          environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'Y'
         }
       }
       steps {

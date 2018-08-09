@@ -106,6 +106,16 @@ pipeline {
         }
       }//steps
     }//stage
+    stage('Deploy') {
+      when {
+        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Executing deployment..."
+        }
+      }//steps
+    }//stage
     stage('Promover') {
       agent none
       when {

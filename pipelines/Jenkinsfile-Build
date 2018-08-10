@@ -16,8 +16,8 @@ pipeline {
       steps {
         script {
           sh 'printenv'
-          echo "Checkout do código fonte de ${GIT_URL}..."
-          git url: "${GIT_URL}", branch: "${BRANCH}"
+          echo "Checkout do código fonte de ${APP_GIT_URL}..."
+          git url: "${APP_GIT_URL}", branch: "${BRANCH}"
         }
       }
     }

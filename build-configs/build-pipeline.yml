@@ -28,8 +28,8 @@ objects:
            value: ${NAMESPACE_BASE}
          - name: "APP_NAME"
            value: ${APP_NAME}
-         - name: "GIT_URL"
-           value: ${GIT_URL}
+         - name: "APP_GIT_URL"
+           value: ${APP_GIT_URL}
      output:
        to:
          kind: "ImageStreamTag"
@@ -43,7 +43,7 @@ parameters:
   name: NAMESPACE_BASE
 - description: Git URL
   displayName: Git URL
-  name: GIT_URL
+  name: APP_GIT_URL
 - description: Jenkins Files
   displayName: Jenkins Files
   name: JENKINS_FILE

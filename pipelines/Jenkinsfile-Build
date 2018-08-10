@@ -11,7 +11,6 @@ pipeline {
   }
 
   environment {
-    APP_NAME = "${params.APP_NAME}"
     PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
     DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'
@@ -203,7 +202,9 @@ pipeline {
           echo "Promover Imagem..."
           openshift.withCluster() {
             openshift.withProject("${params.NAMESPACE_PRD}") {
-              echo "Usando projeto: ${openshift.project()}"
+              echo "Usando projeto: ${params.NAMESPACE_PRD}"
+              
+              echo "Selecionando build config ${params.APP_NAME}"
               
               def build = openshift.selector("bc", "${params.APP_NAME}")
 

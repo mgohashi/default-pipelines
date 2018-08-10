@@ -50,9 +50,9 @@ pipeline {
 
           if (branch == 'master') {
             echo 'Env = Production'
-          } else if (branch.startsWith('release/')) {
+          } else if (branch.matches('^release/.+$')) {
             echo 'Env = Release'
-          } else if (branch.startWith('hotfix/')) {
+          } else if (branch.matches('^hotfix/.+$')) {
             echo 'Env = Hotfix'
           } else if (branch == 'develop') {
             echo 'Env = Develop'

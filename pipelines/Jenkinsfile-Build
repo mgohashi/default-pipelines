@@ -1,9 +1,9 @@
 pipeline {
   parameters {
-    string(name: 'NAMESPACE-X', description: 'Informe o nome do Namespace de Cross?')
-    string(name: 'NAMESPACE-DEV', description: 'Informe o nome do Namespace de Dev?')
-    string(name: 'NAMESPACE-Hml', description: 'Informe o nome do Namespace de Hml?')
-    string(name: 'NAMESPACE-Prd', description: 'Informe o nome do Namespace de Prd?')
+    string(name: 'NAMESPACE_X', description: 'Informe o nome do Namespace de Cross?')
+    string(name: 'NAMESPACE_DEV', description: 'Informe o nome do Namespace de Dev?')
+    string(name: 'NAMESPACE_Hml', description: 'Informe o nome do Namespace de Hml?')
+    string(name: 'NAMESPACE_Prd', description: 'Informe o nome do Namespace de Prd?')
     string(name: 'APP_NAME', description: 'What is the application name?')
     string(name: 'GIT_URL', description: 'What is the Git repository?')
     string(name: 'BRANCH', description: 'What is the branch?')

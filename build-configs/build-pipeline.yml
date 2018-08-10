@@ -20,13 +20,13 @@ objects:
        jenkinsPipelineStrategy:
          jenkinsfilePath: ${JENKINS_FILE}
          env:
-         - name: "NAMESPACE-X"
+         - name: "NAMESPACE_X"
            value: ${NAMESPACE_BASE}-img
-         - name: "NAMESPACE-DEV"
+         - name: "NAMESPACE_DEV"
            value: ${NAMESPACE_BASE}-dev
-         - name: "NAMESPACE-HML"
+         - name: "NAMESPACE_HML"
            value: ${NAMESPACE_BASE}-hml
-         - name: "NAMESPACE-PRD"
+         - name: "NAMESPACE_PRD"
            value: ${NAMESPACE_BASE}
          - name: "APP_NAME"
            value: ${APP_NAME}

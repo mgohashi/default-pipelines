@@ -43,6 +43,7 @@ pipeline {
             env.REQUIRES_APPROVAL = 'Y'
             env.REQUIRES_PROMOTION = 'N'
             env.REQUIRES_DIRECT_PROMOTION = 'N'
+            env.VERSION = 'MASTER'
           } else if (branch.matches('^release/.+$')) {
             echo 'Env = Release'
             env.REQUIRES_BUILD = 'Y'
@@ -50,6 +51,7 @@ pipeline {
             env.REQUIRES_APPROVAL = 'N'
             env.REQUIRES_PROMOTION = 'Y'
             env.REQUIRES_DIRECT_PROMOTION = 'N'
+            env.VERSION = branch.replaceAll('^release/', '')
           } else if (branch.matches('^hotfix/.+$')) {
             echo 'Env = Hotfix'
             env.REQUIRES_BUILD = 'Y'
@@ -57,6 +59,7 @@ pipeline {
             env.REQUIRES_APPROVAL = 'Y'
             env.REQUIRES_PROMOTION = 'Y'
             env.REQUIRES_DIRECT_PROMOTION = 'Y'
+            env.VERSION = branch.replaceAll('^hotfix/', '')
           } else if (branch == 'develop') {
             echo 'Env = Develop'
             env.REQUIRES_BUILD = 'Y'
@@ -64,6 +67,7 @@ pipeline {
             env.REQUIRES_APPROVAL = 'N'
             env.REQUIRES_PROMOTION = 'N'
             env.REQUIRES_DIRECT_PROMOTION = 'N'
+            env.VERSION = 'DEVELOP'
           } else {
             echo 'Env = None'
             env.REQUIRES_BUILD = 'N'
@@ -71,6 +75,7 @@ pipeline {
             env.REQUIRES_APPROVAL = 'N'
             env.REQUIRES_PROMOTION = 'N'
             env.REQUIRES_DIRECT_PROMOTION = 'N'
+            env.VERSION = 'NONE'
           }
 
           sh 'printenv'
@@ -149,7 +154,7 @@ pipeline {
           }
 
           input(
-              message: "Você gostaria de aprovar?",
+              message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO${VERSION} - BUILD: ${BUILD_NUMBER}?",
               ok: "Sim, gostaria.",
               submitter: groupToApprove,
               submitterParameter: "USERNAME"

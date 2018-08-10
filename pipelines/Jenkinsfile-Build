@@ -154,7 +154,7 @@ pipeline {
           }
 
           input(
-              message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
+              message: "Você gostaria de aprovar o deployment da aplicação ${params.APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
               ok: "Sim, gostaria.",
               submitter: groupToApprove,
               submitterParameter: "USERNAME"

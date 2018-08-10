@@ -7,7 +7,6 @@ pipeline {
   //def deployers_group = 'deployers'
 
   parameters {
-    string(name: 'NAMESPACE_X', description: 'Informe o nome do Namespace de Cross?')
     string(name: 'NAMESPACE_DEV', description: 'Informe o nome do Namespace de DEV?')
     string(name: 'NAMESPACE_HML', description: 'Informe o nome do Namespace de HML?')
     string(name: 'NAMESPACE_PRD', description: 'Informe o nome do Namespace de PRD?')

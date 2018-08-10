@@ -1,11 +1,5 @@
 pipeline {
   environment {
-    NAMESPACE_DEV = "${params.NAMESPACE_DEV}"
-    NAMESPACE_HML = "${params.NAMESPACE_HML}"
-    NAMESPACE_PRD = "${params.NAMESPACE_PRD}"
-    APP_NAME = "${params.APP_NAME}"
-    GIT_URL = "${params.GIT_URL}"
-    BRANCH = "${params.BRANCH}"
     PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
     DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'

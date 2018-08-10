@@ -132,10 +132,17 @@ pipeline {
       }
       steps {
         script {
+          def branch = params.BRANCH
+          def groupToApprove = 'gestores'
+
+          if (branch == 'master') {
+              groupToApprove = 'deployers'
+          }
+
           input(
               message: "Você gostaria de aprovar?",
               ok: "Sim, gostaria.",
-              submitter: "gestores",
+              submitter: groupToApprove,
               submitterParameter: "USERNAME" 
           )
         }

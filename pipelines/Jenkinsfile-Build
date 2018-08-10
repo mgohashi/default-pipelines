@@ -27,7 +27,7 @@ pipeline {
     stage('Checkout') {
       steps {
         script {
-          echo "Checkout source code from ${GIT_URL}..."
+          echo "Checkout do código fonte de ${GIT_URL}..."
           git url: "${GIT_URL}", branch: "${BRANCH}"
         }
       }
@@ -38,7 +38,7 @@ pipeline {
           def branch = params.BRANCH
 
           if (branch == 'master') {
-            echo 'Env = Production'
+            echo 'Env = Produção'
             env.REQUIRES_BUILD = 'N'
             env.REQUIRES_DEPLOYMENT = 'Y'
             env.REQUIRES_APPROVAL = 'Y'
@@ -46,7 +46,7 @@ pipeline {
             env.REQUIRES_DIRECT_PROMOTION = 'N'
             env.VERSION = 'MASTER'
           } else if (branch.matches('^release/.+$')) {
-            echo 'Env = Release'
+            echo 'Env = Homologação'
             env.REQUIRES_BUILD = 'Y'
             env.REQUIRES_DEPLOYMENT = 'Y'
             env.REQUIRES_APPROVAL = 'N'
@@ -62,7 +62,7 @@ pipeline {
             env.REQUIRES_DIRECT_PROMOTION = 'Y'
             env.VERSION = branch.replaceAll('^hotfix/', '')
           } else if (branch == 'develop') {
-            echo 'Env = Develop'
+            echo 'Env = Desenvolvimento'
             env.REQUIRES_BUILD = 'Y'
             env.REQUIRES_DEPLOYMENT = 'Y'
             env.REQUIRES_APPROVAL = 'N'
@@ -70,7 +70,7 @@ pipeline {
             env.REQUIRES_DIRECT_PROMOTION = 'N'
             env.VERSION = 'DEVELOP'
           } else {
-            echo 'Env = None'
+            echo 'Env = Nenhum'
             env.REQUIRES_BUILD = 'N'
             env.REQUIRES_DEPLOYMENT = 'N'
             env.REQUIRES_APPROVAL = 'N'
@@ -79,7 +79,7 @@ pipeline {
             env.VERSION = 'NONE'
           }
 
-          sh 'printenv'
+          //sh 'printenv'
         }
       }
     }
@@ -89,41 +89,41 @@ pipeline {
       }
       steps {
         script {
-          echo "Application build..."
+          echo "Excutando o build da aplicação..."
         }
       }
     }
-    stage('Unit Tests') {
+    stage('Testes Unitários') {
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }
       steps {
         script {
-          echo "Running unit tests..."
+          echo "Executando testes unitários..."
         }
       }
     }
-    stage('Static Analysis') {
+    stage('Analise Estática') {
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }
       steps {
         script {
-          echo "Running analysis..."
+          echo "Executando análise estática..."
         }
       }
     }
-    stage('Export Nexus') {
+    stage('Exportar para Nexus') {
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }
       steps {
         script {
-          echo "Exporting to nexus..."
+          echo "Exportando para o nexus..."
         }
       }
     }
-    stage('Build Image') {
+    stage('Build de Imagem') {
       when {
         allOf {
           environment name: 'REQUIRES_BUILD', value: 'Y'
@@ -132,11 +132,11 @@ pipeline {
       }
       steps {
         script {
-          echo "Building image..."
+          echo "Fazendo build da imagem..."
         }
       }//steps
     }//stage
-    stage('Aprovar') {
+    stage('Aprovação') {
       agent none
       when {
         allOf { 
@@ -170,7 +170,7 @@ pipeline {
       }
       steps {
         script {
-          echo "Executing deployment..."
+          echo "Executando deployment..."
         }
       }//steps
     }//stage
@@ -193,21 +193,32 @@ pipeline {
         }
       }//steps
     }//stage
-    stage('Promoting Image') {
+    stage('Promover Imagem') {
       when {
         environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
         environment name: 'REQUIRES_PROMOTION', value: 'Y'
       }
       steps {
         script {
-          echo "Promoting image..."
+          echo "Promover Imagem..."
+          openshift.withCluster() {
+            openshift.withProject("${params.NAMESPACE_PRD}") {
+              echo "Usando projeto: ${openshift.project()}"
+              
+              def build = openshift.selector("bc", "${params.APP_NAME}")
+
+              if (!build.exists()) {
+                build.startBuild()
+              }
+            }
+          }
         }
       }//steps
     }//stage
     stage('Finalizando') {
       steps {
         script {
-          echo "Finalizing..."
+          echo "Finalizando..."
         }
       }
     }

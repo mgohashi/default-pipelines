@@ -11,6 +11,12 @@ pipeline {
   }
 
   environment {
+    NAMESPACE_DEV = "${params.NAMESPACE_DEV}"
+    NAMESPACE_HML = "${params.NAMESPACE_HML}"
+    NAMESPACE_PRD = "${params.NAMESPACE_PRD}"
+    APP_NAME = "${params.APP_NAME}"
+    GIT_URL = "${params.GIT_URL}"
+    BRANCH = "${params.BRANCH}"
     PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
     DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'
@@ -78,7 +84,7 @@ pipeline {
             env.VERSION = 'NONE'
           }
 
-          //sh 'printenv'
+          sh 'printenv'
         }
       }
     }
@@ -154,7 +160,7 @@ pipeline {
           }
 
           input(
-              message: "Você gostaria de aprovar o deployment da aplicação ${params.APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
+              message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
               ok: "Sim, gostaria.",
               submitter: groupToApprove,
               submitterParameter: "USERNAME"
@@ -184,7 +190,7 @@ pipeline {
       steps {
         script {
           input(
-              message: "Você gostaria de liberar a promoção da aplicação ${params.APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
+              message: "Você gostaria de liberar a promoção da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
               ok: "Sim, gostaria.",
               submitter: env.APPROVERS_GROUP,
               submitterParameter: "USERNAME"
@@ -201,12 +207,12 @@ pipeline {
         script {
           echo "Promover Imagem..."
           openshift.withCluster() {
-            openshift.withProject("${params.NAMESPACE_PRD}") {
-              echo "Usando projeto: ${params.NAMESPACE_PRD}"
+            openshift.withProject("${NAMESPACE_PRD}") {
+              echo "Usando projeto: ${NAMESPACE_PRD}"
               
-              echo "Selecionando build config ${params.APP_NAME}"
-              
-              def build = openshift.selector("bc", "${params.APP_NAME}")
+              echo "Selecionando build config ${APP_NAME}"
+
+              def build = openshift.selector("bc", "${APP_NAME}")
 
               if (!build.exists()) {
                 build.startBuild()

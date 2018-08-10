@@ -32,6 +32,7 @@ pipeline {
     stage('Checkout') {
       steps {
         script {
+          sh 'printenv'
           echo "Checkout do código fonte de ${GIT_URL}..."
           git url: "${GIT_URL}", branch: "${BRANCH}"
         }

@@ -1,11 +1,4 @@
 pipeline {
-  def product_owners_group = 'P_IJK_APROVADOR_PRODUCAO'
-  def approvers_group = 'P_IJK_LIBERACAO_PRODUCAO'
-  def deployers_group = 'P_IJK_OPERADOR_PRODUCAO'
-  //def product_owners_group = 'gestores'
-  //def approvers_group = 'aprovadores'
-  //def deployers_group = 'deployers'
-
   parameters {
     string(name: 'NAMESPACE_DEV', description: 'Informe o nome do Namespace de DEV?')
     string(name: 'NAMESPACE_HML', description: 'Informe o nome do Namespace de HML?')
@@ -15,6 +8,16 @@ pipeline {
     string(name: 'BRANCH', description: 'What is the Branch?')
     //string(name: 'SECRET', description: 'What is the Secret name?')
     //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
+  }
+
+  environment {
+    PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
+    APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
+    DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'
+
+    //PRODUCT_OWNERS_GROUP = 'gestores'
+    //APPROVERS_GROUP = 'aprovadores'
+    //DEPLOYERS_GROUP = 'deployers'    
   }
 
   agent any
@@ -139,10 +142,10 @@ pipeline {
       steps {
         script {
           def branch = params.BRANCH
-          def groupToApprove = product_owners_group
+          def groupToApprove = env.PRODUCT_OWNERS_GROUP
 
           if (branch == 'master') {
-              groupToApprove = deployers_group
+              groupToApprove = env.DEPLOYERS_GROUP
           }
 
           input(
@@ -178,7 +181,7 @@ pipeline {
           input(
               message: "Você gostaria de promover?",
               ok: "Sim, gostaria.",
-              submitter: approvers_group,
+              submitter: env.APPROVERS_GROUP,
               submitterParameter: "USERNAME"
           )
         }

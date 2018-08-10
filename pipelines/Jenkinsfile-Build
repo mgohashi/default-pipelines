@@ -47,7 +47,7 @@ pipeline {
             echo 'Env = Release'
             env.REQUIRES_BUILD = 'Y'
             env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'Y'
+            env.REQUIRES_APPROVAL = 'N'
             env.REQUIRES_PROMOTION = 'Y'
             env.REQUIRES_DIRECT_PROMOTION = 'N'
           } else if (branch.matches('^hotfix/.+$')) {

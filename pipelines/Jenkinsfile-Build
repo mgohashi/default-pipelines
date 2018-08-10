@@ -11,14 +11,6 @@ pipeline {
     //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
   }
 
-  environment {
-    REQUIRES_BUILD
-    REQUIRES_DEPLOYMENT
-    REQUIRES_APPROVAL
-    REQUIRES_PROMOTION
-    REQUIRES_DIRECT_PROMOTION
-  }
-
   agent any
 
   stages {
@@ -37,32 +29,39 @@ pipeline {
 
           if (branch == 'master') {
             echo 'Env = Production'
-            REQUIRES_BUILD = 'N'
-            REQUIRES_DEPLOYMENT = 'Y'
-            REQUIRES_APPROVAL = 'Y'
-            REQUIRES_PROMOTION = 'N'
-            REQUIRES_DIRECT_PROMOTION = 'N'
+            env.REQUIRES_BUILD = 'N'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'Y'
+            env.REQUIRES_PROMOTION = 'N'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
           } else if (branch.matches('^release/.+$')) {
             echo 'Env = Release'
-            REQUIRES_BUILD = 'Y'
-            REQUIRES_DEPLOYMENT = 'Y'
-            REQUIRES_APPROVAL = 'Y'
-            REQUIRES_PROMOTION = 'Y'
-            REQUIRES_DIRECT_PROMOTION = 'N'
+            env.REQUIRES_BUILD = 'Y'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'Y'
+            env.REQUIRES_PROMOTION = 'Y'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
           } else if (branch.matches('^hotfix/.+$')) {
             echo 'Env = Hotfix'
-            REQUIRES_BUILD = 'Y'
-            REQUIRES_DEPLOYMENT = 'Y'
-            REQUIRES_APPROVAL = 'Y'
-            REQUIRES_PROMOTION = 'Y'
-            REQUIRES_DIRECT_PROMOTION = 'Y'
+            env.REQUIRES_BUILD = 'Y'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'Y'
+            env.REQUIRES_PROMOTION = 'Y'
+            env.REQUIRES_DIRECT_PROMOTION = 'Y'
           } else if (branch == 'develop') {
             echo 'Env = Develop'
-            REQUIRES_BUILD = 'Y'
-            REQUIRES_DEPLOYMENT = 'Y'
-            REQUIRES_APPROVAL = 'N'
-            REQUIRES_PROMOTION = 'N'
-            REQUIRES_DIRECT_PROMOTION = 'N'
+            env.REQUIRES_BUILD = 'Y'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'N'
+            env.REQUIRES_PROMOTION = 'N'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
+          } else {
+            echo 'Env = None'
+            env.REQUIRES_BUILD = 'N'
+            env.REQUIRES_DEPLOYMENT = 'N'
+            env.REQUIRES_APPROVAL = 'N'
+            env.REQUIRES_PROMOTION = 'N'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
           }
 
           sh 'printenv'

@@ -154,7 +154,7 @@ pipeline {
           }
 
           input(
-              message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO${VERSION} - BUILD: ${BUILD_NUMBER}?",
+              message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
               ok: "Sim, gostaria.",
               submitter: groupToApprove,
               submitterParameter: "USERNAME"
@@ -184,7 +184,7 @@ pipeline {
       steps {
         script {
           input(
-              message: "Você gostaria de promover?",
+              message: "Você gostaria de liberar a promoção da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
               ok: "Sim, gostaria.",
               submitter: env.APPROVERS_GROUP,
               submitterParameter: "USERNAME"

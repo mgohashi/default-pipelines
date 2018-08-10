@@ -24,7 +24,7 @@ pipeline {
     stage('Configurar Pipeline') {
       steps {
         script {
-          def branch = params.BRANCH
+          def branch = "${BRANCH}"
 
           if (branch == 'master') {
             echo 'Env = Produção'

@@ -3,6 +3,7 @@ pipeline {
     string(name: 'NAMESPACE', description: 'What is the Namespace name?')
     string(name: 'APP_NAME', description: 'What is the application name?')
     string(name: 'GIT_URL', description: 'What is the Git repository?')
+    string(name: 'BRANCH', description: 'What is the branch?')
     //string(name: 'SECRET', description: 'What is the Secret name?')
     //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
   }
@@ -31,31 +32,29 @@ pipeline {
   }
 
   agent any
-  
+
   stages {
     stage('Checkout') {
       steps {
         script {
-          echo "Checkout source code from ${GIT_URL}..."
-          git '${GIT_URL}'
           sh 'printenv'
+          echo "Checkout source code from ${GIT_URL}..."
+          git url: "${GIT_URL}", branch: "${BRANCH}"
         }
       }
     }
     stage('Configurar Build') {
       steps {
         script {
-          def branch = env.GIT_BRANCH
+          def branch = params.BRANCH
 
-          echo "Branch = ${branch}"
-
-          if (branch == 'origin/master') {
+          if (branch == 'master') {
             echo 'Env = Production'
           } else if (branch.startsWith('release/')) {
             echo 'Env = Release'
           } else if (branch.startWith('hotfix/')) {
             echo 'Env = Hotfix'
-          } else if (branch.startWith('develop/')) {
+          } else if (branch == 'develop') {
             echo 'Env = Develop'
           }
         }

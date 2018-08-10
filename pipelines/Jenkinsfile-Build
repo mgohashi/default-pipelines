@@ -1,15 +1,4 @@
 pipeline {
-  parameters {
-    string(name: 'NAMESPACE_DEV', description: 'Informe o nome do Namespace de DEV?')
-    string(name: 'NAMESPACE_HML', description: 'Informe o nome do Namespace de HML?')
-    string(name: 'NAMESPACE_PRD', description: 'Informe o nome do Namespace de PRD?')
-    string(name: 'APP_NAME', description: 'What is the Application name?')
-    string(name: 'GIT_URL', description: 'What is the Git repository?')
-    string(name: 'BRANCH', description: 'What is the Branch?')
-    //string(name: 'SECRET', description: 'What is the Secret name?')
-    //string(name: 'CONFIGMAP', description: 'What is the ConfigMap name?')
-  }
-
   environment {
     NAMESPACE_DEV = "${params.NAMESPACE_DEV}"
     NAMESPACE_HML = "${params.NAMESPACE_HML}"

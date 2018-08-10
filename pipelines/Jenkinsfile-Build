@@ -22,7 +22,7 @@ pipeline {
         }
       }
     }
-    stage('Configurar Build') {
+    stage('Configurar Pipeline') {
       steps {
         script {
           def branch = params.BRANCH

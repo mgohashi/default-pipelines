@@ -1,7 +1,7 @@
 #!/bin/sh
 
 oc process -f build-configs/build-pipeline.yml \
-    -p NAMESPACE_BASE='test' -p APP_NAME='api-client' \
-    -p GIT_URL='http://gogs-banestes-cicd-tools.apps.rh-consulting-br.com/banestes/api-client' \
+    -p NAMESPACE_BASE='rh-test' -p APP_NAME='api-client' \
+    -p GIT_URL='https://gogs-cicd-tools.cloud.sfb/banestes/api-cliente.git' \
     -p JENKINS_FILE='pipelines/Jenkinsfile-Build' \
-    | oc apply -n test-img -f -
+    | oc apply -n rh-test-cross -f -

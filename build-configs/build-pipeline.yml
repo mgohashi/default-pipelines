@@ -21,7 +21,7 @@ objects:
          jenkinsfilePath: ${JENKINS_FILE}
          env:
          - name: "NAMESPACE_X"
-           value: ${NAMESPACE_BASE}-img
+           value: ${NAMESPACE_BASE}-cross
          - name: "NAMESPACE_DEV"
            value: ${NAMESPACE_BASE}-dev
          - name: "NAMESPACE_HML"

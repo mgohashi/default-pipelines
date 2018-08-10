@@ -15,7 +15,7 @@ objects:
    spec:
      source:
        git:
-         uri: "http://gogs-banestes-cicd-tools.apps.rh-consulting-br.com/banestes/default-pipelines"
+         uri: "http://gogs-cicd-tools.cloud.sfb/banestes/default-pipelines"
      strategy:
        jenkinsPipelineStrategy:
          jenkinsfilePath: ${JENKINS_FILE}

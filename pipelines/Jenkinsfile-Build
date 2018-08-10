@@ -1,4 +1,4 @@
-pipeline {
+pipeline { 
   environment {
     PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'

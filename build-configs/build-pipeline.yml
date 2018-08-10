@@ -20,8 +20,14 @@ objects:
        jenkinsPipelineStrategy:
          jenkinsfilePath: ${JENKINS_FILE}
          env:
-         - name: "NAMESPACE"
-           value: ${NAMESPACE}
+         - name: "NAMESPACE-X"
+           value: ${NAMESPACE_BASE}-img
+         - name: "NAMESPACE-DEV"
+           value: ${NAMESPACE_BASE}-dev
+         - name: "NAMESPACE-HML"
+           value: ${NAMESPACE_BASE}-hml
+         - name: "NAMESPACE-PRD"
+           value: ${NAMESPACE_BASE}
          - name: "APP_NAME"
            value: ${APP_NAME}
          - name: "GIT_URL"
@@ -36,7 +42,7 @@ parameters:
   name: APP_NAME
 - description: Namespace
   displayName: Namespace
-  name: NAMESPACE
+  name: NAMESPACE_BASE
 - description: Git URL
   displayName: Git URL
   name: GIT_URL

@@ -1,6 +1,9 @@
 pipeline {
   parameters {
-    string(name: 'NAMESPACE', description: 'What is the Namespace name?')
+    string(name: 'NAMESPACE-X', description: 'Informe o nome do Namespace de Cross?')
+    string(name: 'NAMESPACE-DEV', description: 'Informe o nome do Namespace de Dev?')
+    string(name: 'NAMESPACE-Hml', description: 'Informe o nome do Namespace de Hml?')
+    string(name: 'NAMESPACE-Prd', description: 'Informe o nome do Namespace de Prd?')
     string(name: 'APP_NAME', description: 'What is the application name?')
     string(name: 'GIT_URL', description: 'What is the Git repository?')
     string(name: 'BRANCH', description: 'What is the branch?')
@@ -9,26 +12,11 @@ pipeline {
   }
 
   environment {
-    // Desenvolvimento
-    REQUIRES_BUILD = 'Y'
-    REQUIRES_DEPLOYMENT = 'Y'
+    REQUIRES_BUILD = 'N'
+    REQUIRES_DEPLOYMENT = 'N'
     REQUIRES_APPROVAL = 'N'
     REQUIRES_PROMOTION = 'N'
     REQUIRES_DIRECT_PROMOTION = 'N'
-
-    // Homologação
-    // REQUIRES_BUILD = 'Y'
-    // REQUIRES_DEPLOYMENT = 'Y'
-    // REQUIRES_APPROVAL = 'Y'
-    // REQUIRES_PROMOTION = 'Y'
-    // REQUIRES_DIRECT_PROMOTION = 'N'
-
-    // Hotfix
-    // REQUIRES_BUILD = 'Y'
-    // REQUIRES_DEPLOYMENT = 'Y'
-    // REQUIRES_APPROVAL = 'Y'
-    // REQUIRES_PROMOTION = 'Y'
-    // REQUIRES_DIRECT_PROMOTION = 'Y'
   }
 
   agent any
@@ -37,7 +25,7 @@ pipeline {
     stage('Checkout') {
       steps {
         script {
-          sh 'printenv'
+          // sh 'printenv'
           echo "Checkout source code from ${GIT_URL}..."
           git url: "${GIT_URL}", branch: "${BRANCH}"
         }
@@ -50,17 +38,40 @@ pipeline {
 
           if (branch == 'master') {
             echo 'Env = Production'
+            REQUIRES_BUILD = 'N'
+            REQUIRES_DEPLOYMENT = 'Y'
+            REQUIRES_APPROVAL = 'Y'
+            REQUIRES_PROMOTION = 'N'
+            REQUIRES_DIRECT_PROMOTION = 'N'
           } else if (branch.matches('^release/.+$')) {
             echo 'Env = Release'
+            REQUIRES_BUILD = 'Y'
+            REQUIRES_DEPLOYMENT = 'Y'
+            REQUIRES_APPROVAL = 'Y'
+            REQUIRES_PROMOTION = 'Y'
+            REQUIRES_DIRECT_PROMOTION = 'N'
           } else if (branch.matches('^hotfix/.+$')) {
             echo 'Env = Hotfix'
+            REQUIRES_BUILD = 'Y'
+            REQUIRES_DEPLOYMENT = 'Y'
+            REQUIRES_APPROVAL = 'Y'
+            REQUIRES_PROMOTION = 'Y'
+            REQUIRES_DIRECT_PROMOTION = 'Y'
           } else if (branch == 'develop') {
             echo 'Env = Develop'
+            REQUIRES_BUILD = 'Y'
+            REQUIRES_DEPLOYMENT = 'Y'
+            REQUIRES_APPROVAL = 'N'
+            REQUIRES_PROMOTION = 'N'
+            REQUIRES_DIRECT_PROMOTION = 'N'
           }
         }
       }
     }
     stage('Build') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
       steps {
         script {
           echo "Application build..."
@@ -68,6 +79,9 @@ pipeline {
       }
     }
     stage('Unit Tests') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
       steps {
         script {
           echo "Running unit tests..."
@@ -75,6 +89,9 @@ pipeline {
       }
     }
     stage('Static Analysis') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
       steps {
         script {
           echo "Running analysis..."
@@ -82,6 +99,9 @@ pipeline {
       }
     }
     stage('Export Nexus') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
       steps {
         script {
           echo "Exporting to nexus..."
@@ -90,7 +110,10 @@ pipeline {
     }
     stage('Build Image') {
       when {
-        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        allOf {
+          environment name: 'REQUIRES_BUILD', value: 'Y'
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        }
       }
       steps {
         script {

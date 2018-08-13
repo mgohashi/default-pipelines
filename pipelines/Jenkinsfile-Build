@@ -33,7 +33,6 @@ pipeline {
             env.REQUIRES_APPROVAL = 'Y'
             env.REQUIRES_PROMOTION = 'N'
             env.REQUIRES_DIRECT_PROMOTION = 'N'
-            env.VERSION = 'MASTER'
           } else if (branch.matches('^release/.+$')) {
             echo 'Env = Homologação'
             env.REQUIRES_BUILD = 'Y'
@@ -200,7 +199,7 @@ pipeline {
 
               if (build.exists()) {
                 echo "Starting build config ${APP_NAME}..."
-                build.startBuild("-e", "BRANCH=master")
+                build.startBuild("-e", "BRANCH=master", "-e", "VERSION=${VERSION}")
               }
             }
           }

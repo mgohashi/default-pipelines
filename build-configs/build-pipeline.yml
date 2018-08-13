@@ -57,3 +57,7 @@ parameters:
   displayName: Branch
   name: BRANCH
   value: 'develp'
+- description: Version
+  displayName: Version
+  name: VERSION
+  value: 'XX'

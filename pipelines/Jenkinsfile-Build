@@ -12,9 +12,7 @@ pipeline {
     //DEBUG_WORKFLOW = "${ENABLE_DEBUG_WORKFLOW}"
   }
 
-  agent {
-    node { label 'jenkinsMavenSlave' }
-  }
+  agent "none"
 
   stages {
     stage('Checkout') {

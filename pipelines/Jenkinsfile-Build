@@ -12,7 +12,7 @@ pipeline {
     //DEBUG_WORKFLOW = "${ENABLE_DEBUG_WORKFLOW}"
   }
 
-  agent "none"
+  agent "any"
 
   stages {
     stage('Checkout') {

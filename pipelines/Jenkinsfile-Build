@@ -18,6 +18,9 @@ pipeline {
 
   stages {
       stage('Checkout') {
+        when {
+          not { environment name: 'BRANCH', value: 'master' }
+        }
         steps {
           script {
             echo "Checkout do código fonte de ${APP_GIT_URL}..."

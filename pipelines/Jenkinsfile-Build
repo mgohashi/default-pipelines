@@ -19,7 +19,6 @@ pipeline {
     stage('Checkout') {
       steps {
         script {
-          sh 'printenv'
           echo "Checkout do código fonte de ${APP_GIT_URL}..."
           git url: "${APP_GIT_URL}", branch: "${BRANCH}"
         }
@@ -64,6 +63,7 @@ pipeline {
           } else {
             error "Erro: A branch ${branch} não é válida!"
           }
+          sh 'printenv'
         }
       }
     }
@@ -109,6 +109,11 @@ pipeline {
       steps {
         script {
           echo "Executando análise estática..."
+          if ("${DEBUG_WORKFLOW}" == "N") {
+            withSonarQubeEnv('Sonar 6.4') {
+              sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+            }
+          }
         }
       }
     }

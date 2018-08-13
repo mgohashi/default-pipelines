@@ -1,12 +1,14 @@
-pipeline { 
+pipeline {
   environment {
     PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
     DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'
+    DEBUG_WORKFLOW = "${ENABLE_DEBUG_WORKFLOW ?: Y}"
 
     //PRODUCT_OWNERS_GROUP = 'gestores'
     //APPROVERS_GROUP = 'aprovadores'
-    //DEPLOYERS_GROUP = 'deployers'    
+    //DEPLOYERS_GROUP = 'deployers'
+    //DEBUG_WORKFLOW = "${ENABLE_DEBUG_WORKFLOW}"
   }
 
   agent {
@@ -72,8 +74,10 @@ pipeline {
       steps {
         script {
           echo "Excutando o build da aplicação..."
-          withMaven(mavenSettingsConfig: 'maven-settings') {
-            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
+          if ("${DEBUG_WORKFLOW}" == "N") {
+            withMaven(mavenSettingsConfig: 'maven-settings') {
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
+            }
           }
         }
       }
@@ -85,12 +89,22 @@ pipeline {
       steps {
         script {
           echo "Executando testes unitários..."
+          if ("${DEBUG_WORKFLOW}" == "N") {
+            withMaven(mavenSettingsConfig: 'maven-settings') {
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
+            }
+          }
         }
       }
     }
     stage('Analise Estática') {
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
+        if ("${DEBUG_WORKFLOW}" == "N") {
+          withSonarQubeEnv('Sonar 6.4') {
+            sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+          }
+        }
       }
       steps {
         script {

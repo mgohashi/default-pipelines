@@ -173,10 +173,10 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            openshift.withProject("${params.PROJECT_NAME}") {
+            openshift.withProject("${NAMESPACE}") {
               echo "Criando build config da imagem final..."
-              if (!openshift.selector("bc", "${params.APP_NAME}").exists()) {
-                openshift.newBuild("--name=${params.APP_NAME}", "--image-stream=fis-introscope:latest", "--binary")
+              if (!openshift.selector("bc", "${APP_NAME}").exists()) {
+                openshift.newBuild("--name=${APP_NAME}", "--image-stream=fis-introscope:latest", "--binary")
               }
             }
           }

@@ -1,4 +1,4 @@
-@Library('funcoes-auxiliares') _
+//@Library('funcoes-auxiliares') _
 
 pipeline {
   environment {

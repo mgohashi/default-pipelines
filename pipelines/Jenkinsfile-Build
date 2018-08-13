@@ -16,6 +16,9 @@ pipeline {
 
   stages {
     stage('Checkout') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
+      }
       steps {
         script {
           echo "Checkout do código fonte de ${APP_GIT_URL}..."
@@ -24,6 +27,9 @@ pipeline {
       }
     }
     stage('Configurar Pipeline') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
+      }
       steps {
         script {
           def branch = "${BRANCH}"

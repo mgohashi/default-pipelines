@@ -6,6 +6,7 @@ pipeline {
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
     DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'
     DEBUG_WORKFLOW = "N"
+    
     //PRODUCT_OWNERS_GROUP = 'gestores'
     //APPROVERS_GROUP = 'aprovadores'
     //DEPLOYERS_GROUP = 'deployers'
@@ -28,8 +29,8 @@ pipeline {
     stage('Configurar Pipeline') {
       steps {
         script {
-          if ("${ENABLE_DEBUG_WORKFLOW}" == "Y") {
-            DEBUG_WORKFLOW = "Y"
+          if ("${env.ENABLE_DEBUG_WORKFLOW}" == "Y") {
+            env.DEBUG_WORKFLOW = "Y"
           }
 
           def branch = "${BRANCH}"

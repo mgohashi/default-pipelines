@@ -132,8 +132,8 @@ pipeline {
           script {
             echo "Exportando para o nexus..."
             withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION}.${BUILD_ID} version:set"
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit version:commit"
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION}.${BUILD_ID} versions:set"
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit versions:commit"
             }
           }
         }

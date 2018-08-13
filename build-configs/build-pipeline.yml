@@ -34,6 +34,8 @@ objects:
            value: ${BRANCH}
          - name: "VERSION"
            value: "${VERSION}"
+         - name: "DEBUG_WORKFLOW"
+           value: "${DEBUG_WORKFLOW}"
      output:
        to:
          kind: "ImageStreamTag"
@@ -63,3 +65,7 @@ parameters:
   displayName: Version
   name: VERSION
   value: 'XX'
+- description: Debug workflow (Y/N)
+  displayName: Debug workflow
+  name: DEBUG_WORKFLOW
+  value: 'N'

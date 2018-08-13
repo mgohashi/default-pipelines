@@ -200,7 +200,7 @@ pipeline {
 
               if (build.exists()) {
                 echo "Starting build config ${APP_NAME}..."
-                build.startBuild(" -p BRANCH=master")
+                build.startBuild("-p", "BRANCH=master")
               }
             }
           }

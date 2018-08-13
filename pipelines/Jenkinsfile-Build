@@ -69,6 +69,9 @@ pipeline {
       }
     }
     stage('Build') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
+      }
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }
@@ -84,6 +87,9 @@ pipeline {
       }
     }
     stage('Testes Unitários') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
+      }
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }
@@ -99,6 +105,9 @@ pipeline {
       }
     }
     stage('Analise Estática') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
+      }
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }
@@ -122,6 +131,9 @@ pipeline {
       }
     }
     stage('Exportar para Nexus') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
+      }
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
       }

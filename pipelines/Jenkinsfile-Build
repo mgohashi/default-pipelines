@@ -35,6 +35,11 @@ pipeline {
 
           if (branch == 'master') {
             echo 'Env = Produção'
+
+            if (env.VERSION == "XX") {
+              error: "Version cannot be null!"
+            }
+
             env.NAMESPACE = "${NAMESPACE_PRD}"
             env.REQUIRES_BUILD = 'N'
             env.REQUIRES_DEPLOYMENT = 'Y'
@@ -268,9 +273,9 @@ pipeline {
             openshift.withProject("${NAMESPACE_PRD}") {
               echo "Usando projeto: ${NAMESPACE_PRD}"
               
-              echo "Selecionando build config ${APP_NAME}"
+              echo "Selecionando build config ${APP_NAME}-pipeline"
 
-              def build = openshift.selector("bc", "${APP_NAME}")
+              def build = openshift.selector("bc", "${APP_NAME}-pipeline")
 
               if (build.exists()) {
                 echo "Starting build config ${APP_NAME}..."

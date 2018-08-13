@@ -146,7 +146,9 @@ pipeline {
         }//steps
       }//stage
     stage('Aprovação') {
-      agent none
+      agent {
+        node { label 'master' }
+      }
       when {
         allOf { 
           environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
@@ -173,7 +175,9 @@ pipeline {
       }//steps
     }//stage
     stage('Deploy') {
-      agent none
+      agent {
+        node { label 'master' }
+      }
       when {
         environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
         environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
@@ -185,7 +189,9 @@ pipeline {
       }//steps
     }//stage
     stage('Promover') {
-      agent none
+      agent {
+        node { label 'master' }
+      }
       when {
         allOf {
           environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
@@ -204,7 +210,9 @@ pipeline {
       }//steps
     }//stage
     stage('Promover Imagem') {
-      agent none
+      agent {
+        node { label 'master' }
+      }
       when {
         environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
         environment name: 'REQUIRES_PROMOTION', value: 'Y'
@@ -230,7 +238,9 @@ pipeline {
       }//steps
     }//stage
     stage('Finalizando') {
-      agent none
+      agent {
+        node { label 'master' }
+      }
       steps {
         script {
           echo "Finalizando..."

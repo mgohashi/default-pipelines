@@ -17,161 +17,190 @@ pipeline {
   }
 
   stages {
-      stage('Checkout') {
-        when {
-          not { environment name: 'BRANCH', value: 'master' }
-        }
-        steps {
-          script {
-            echo "Checkout do código fonte de ${APP_GIT_URL}..."
-            git url: "${APP_GIT_URL}", branch: "${BRANCH}"
-          }
+    stage('Checkout') {
+      when {
+        not { environment name: 'BRANCH', value: 'master' }
+      }
+      steps {
+        script {
+          echo "Checkout do código fonte de ${APP_GIT_URL}..."
+          git url: "${APP_GIT_URL}", branch: "${BRANCH}"
         }
       }
-      stage('Configurar Pipeline') {
-        steps {
-          script {
-            def branch = "${BRANCH}"
+    }
+    stage('Configurar Pipeline') {
+      steps {
+        script {
+          def branch = "${BRANCH}"
 
-            if (branch == 'master') {
-              echo 'Env = Produção'
-              env.REQUIRES_BUILD = 'N'
-              env.REQUIRES_DEPLOYMENT = 'Y'
-              env.REQUIRES_APPROVAL = 'Y'
-              env.REQUIRES_PROMOTION = 'N'
-              env.REQUIRES_DIRECT_PROMOTION = 'N'
-            } else if (branch.matches('^release/.+$')) {
-              echo 'Env = Homologação'
-              env.ARTIFACT_ID = getArtifactIdFromPom()
-              env.REQUIRES_BUILD = 'Y'
-              env.REQUIRES_DEPLOYMENT = 'Y'
-              env.REQUIRES_APPROVAL = 'N'
-              env.REQUIRES_PROMOTION = 'Y'
-              env.REQUIRES_DIRECT_PROMOTION = 'N'
-              env.VERSION = branch.replaceAll('^release/', '') + "-" + "${BUILD_ID}"
-            } else if (branch.matches('^hotfix/.+$')) {
-              echo 'Env = Hotfix'
-              env.ARTIFACT_ID = getArtifactIdFromPom()
-              env.REQUIRES_BUILD = 'Y'
-              env.REQUIRES_DEPLOYMENT = 'Y'
-              env.REQUIRES_APPROVAL = 'Y'
-              env.REQUIRES_PROMOTION = 'Y'
-              env.REQUIRES_DIRECT_PROMOTION = 'Y'
-              env.VERSION = branch.replaceAll('^hotfix/', '') + "-" + "${BUILD_ID}"
-            } else if (branch == 'develop') {
-              echo 'Env = Desenvolvimento'
-              env.ARTIFACT_ID = getArtifactIdFromPom()
-              env.REQUIRES_BUILD = 'Y'
-              env.REQUIRES_DEPLOYMENT = 'Y'
-              env.REQUIRES_APPROVAL = 'N'
-              env.REQUIRES_PROMOTION = 'N'
-              env.REQUIRES_DIRECT_PROMOTION = 'N'
-              env.VERSION = getVersionFromPom()
-            } else {
-              error "Erro: A branch ${branch} não é válida!"
-            }
-            sh 'printenv'
+          if (branch == 'master') {
+            echo 'Env = Produção'
+            env.NAMESPACE = "${NAMESPACE_PRD}"
+            env.REQUIRES_BUILD = 'N'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'Y'
+            env.REQUIRES_PROMOTION = 'N'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
+          } else if (branch.matches('^release/.+$')) {
+            echo 'Env = Homologação'
+            env.NAMESPACE = "${NAMESPACE_HML}"
+            env.ARTIFACT_ID = getArtifactIdFromPom()
+            env.REQUIRES_BUILD = 'Y'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'N'
+            env.REQUIRES_PROMOTION = 'Y'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
+            env.VERSION = branch.replaceAll('^release/', '') + "-" + "${BUILD_ID}"
+          } else if (branch.matches('^hotfix/.+$')) {
+            echo 'Env = Hotfix'
+            env.NAMESPACE = "${NAMESPACE_HML}"
+            env.ARTIFACT_ID = getArtifactIdFromPom()
+            env.REQUIRES_BUILD = 'Y'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'Y'
+            env.REQUIRES_PROMOTION = 'Y'
+            env.REQUIRES_DIRECT_PROMOTION = 'Y'
+            env.VERSION = branch.replaceAll('^hotfix/', '') + "-" + "${BUILD_ID}"
+          } else if (branch == 'develop') {
+            echo 'Env = Desenvolvimento'
+            env.NAMESPACE = "${NAMESPACE_DEV}"
+            env.ARTIFACT_ID = getArtifactIdFromPom()
+            env.REQUIRES_BUILD = 'Y'
+            env.REQUIRES_DEPLOYMENT = 'Y'
+            env.REQUIRES_APPROVAL = 'N'
+            env.REQUIRES_PROMOTION = 'N'
+            env.REQUIRES_DIRECT_PROMOTION = 'N'
+            env.VERSION = getVersionFromPom()
+          } else {
+            error "Erro: A branch ${branch} não é válida!"
           }
+          sh 'printenv'
         }
       }
-      stage('Build') {
-        when {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
-        }
-        steps {
-          script {
-            echo "Excutando o build da aplicação..."
-            if ("${DEBUG_WORKFLOW}" == "N") {
-              withMaven(mavenSettingsConfig: 'maven-settings') {
-                sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
-              }
-            }
-          }
-        }
+    }
+    stage('Build') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
       }
-      stage('Testes Unitários') {
-        when {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
-        }
-        steps {
-          script {
-            echo "Executando testes unitários..."
-            if ("${DEBUG_WORKFLOW}" == "N") {
-              withMaven(mavenSettingsConfig: 'maven-settings') {
-                sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
-              }
+      steps {
+        script {
+          echo "Excutando o build da aplicação..."
+          if ("${DEBUG_WORKFLOW}" == "N") {
+            withMaven(mavenSettingsConfig: 'maven-settings') {
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
             }
           }
         }
       }
-      stage('Analise Estática') {
-        when {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
+    }
+    stage('Testes Unitários') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Executando testes unitários..."
+          if ("${DEBUG_WORKFLOW}" == "N") {
+            withMaven(mavenSettingsConfig: 'maven-settings') {
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
+            }
+          }
         }
-        steps {
-          script {
-            echo "Executando análise estática..."
-            if ("${DEBUG_WORKFLOW}" == "N") {
-              withSonarQubeEnv('Sonar 6.4') {
-                sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
-              }
+      }
+    }
+    stage('Analise Estática') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Executando análise estática..."
+          if ("${DEBUG_WORKFLOW}" == "N") {
+            withSonarQubeEnv('Sonar 6.4') {
+              sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+            }
 
-              timeout(time: 1, unit: 'HOURS') {
-                def qg = waitQualityGate()
-                
-                if (qg.status != 'OK') {
-                  error "Falha devido má qualidade do código.\nStatus da análise: ${qg.status}"
-                }
+            timeout(time: 1, unit: 'HOURS') {
+              def qg = waitQualityGate()
+              
+              if (qg.status != 'OK') {
+                error "Falha devido má qualidade do código.\nStatus da análise: ${qg.status}"
               }
             }
           }
         }
       }
-      stage('Updating Release') {
-        when {
-          allOf {
-            environment name: 'REQUIRES_BUILD', value: 'Y'
-            //IMPORTANTE:
-            //Necessario apenas branch develop, pois a master ja sera ignorada pela flag REQUIRES_BUILD.
-            not { environment name: 'BRANCH', value: 'develop' }
-          }
-        }
-        steps {
-          script {
-            echo "Exportando para o nexus..."
-            withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION} versions:set"
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit versions:commit"
-            }
-          }
-        }
-      }
-      stage('Exportar para Nexus') {
-        when {
+    }
+    stage('Updating Release') {
+      when {
+        allOf {
           environment name: 'REQUIRES_BUILD', value: 'Y'
+          //IMPORTANTE:
+          //Necessario apenas branch develop, pois a master ja sera ignorada pela flag REQUIRES_BUILD.
+          not { environment name: 'BRANCH', value: 'develop' }
         }
-        steps {
-          script {
-            echo "Exportando para o nexus..."
-            withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit deploy"
+      }
+      steps {
+        script {
+          echo "Exportando para o nexus..."
+          withMaven(mavenSettingsConfig: 'maven-settings') {
+            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION} versions:set"
+            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit versions:commit"
+          }
+        }
+      }
+    }
+    stage('Exportar para Nexus') {
+      when {
+        environment name: 'REQUIRES_BUILD', value: 'Y'
+      }
+      steps {
+        script {
+          echo "Exportando para o nexus..."
+          withMaven(mavenSettingsConfig: 'maven-settings') {
+            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit deploy"
+          }
+        }
+      }
+    }
+    stage('Create Image Builder') {
+      when {
+        allOf {
+          environment name: 'REQUIRES_BUILD', value: 'Y'
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        }
+      }
+      steps {
+        script {
+          openshift.withCluster() {
+            openshift.withProject("${params.PROJECT_NAME}") {
+              echo "Criando build config da imagem final..."
+              if (!openshift.selector("bc", "${params.APP_NAME}").exists()) {
+                openshift.newBuild("--name=${params.APP_NAME}", "--image-stream=fis-introscope:latest", "--binary")
+              }
             }
           }
         }
       }
-      stage('Build de Imagem') {
-        when {
-          allOf {
-            environment name: 'REQUIRES_BUILD', value: 'Y'
-            environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+    }
+    stage('Build de Imagem') {
+      when {
+        allOf {
+          environment name: 'REQUIRES_BUILD', value: 'Y'
+          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        }
+      }
+      steps {
+        script {
+          echo "Fazendo build da imagem..."
+          openshift.withCluster() {
+            openshift.withProject("${NAMESPACE}") {
+              openshift.tag("${APP_NAME}:latest", "${APP_NAME}:${VERSION}")
+            }
           }
         }
-        steps {
-          script {
-            echo "Fazendo build da imagem..."
-          }
-        }//steps
-      }//stage
+      }//steps
+    }//stage
     stage('Aprovação') {
       when {
         allOf { 

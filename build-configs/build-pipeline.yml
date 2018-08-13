@@ -36,10 +36,6 @@ objects:
            value: "${VERSION}"
          - name: "DEBUG_WORKFLOW"
            value: "${DEBUG_WORKFLOW}"
-     output:
-       to:
-         kind: "ImageStreamTag"
-         name: "${APP_NAME}:latest"
 parameters:
 - description: Application Name
   displayName: Application Name

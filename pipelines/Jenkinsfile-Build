@@ -36,7 +36,7 @@ pipeline {
           if (branch == 'master') {
             echo 'Env = Produção'
 
-            if ("${env.VERSION}" == "XX") {
+            if ("${VERSION}" == "XX") {
               error: "Version cannot be null!"
             }
 

@@ -9,7 +9,9 @@ pipeline {
     //DEPLOYERS_GROUP = 'deployers'    
   }
 
-  agent any
+  agent {
+    node { label 'jenkinsMavenSlave' }
+  }
 
   stages {
     stage('Checkout') {

@@ -100,11 +100,6 @@ pipeline {
     stage('Analise Estática') {
       when {
         environment name: 'REQUIRES_BUILD', value: 'Y'
-        if ("${DEBUG_WORKFLOW}" == "N") {
-          withSonarQubeEnv('Sonar 6.4') {
-            sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
-          }
-        }
       }
       steps {
         script {

@@ -39,7 +39,7 @@ pipeline {
             echo "VERSION=${env.VERSION}"
 
             if ("${env.VERSION}" == "XX") {
-              error: "VERSION cannot be null!"
+              error "VERSION cannot be null!"
             }
 
             env.NAMESPACE = "${NAMESPACE_PRD}"

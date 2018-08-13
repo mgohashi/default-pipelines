@@ -30,6 +30,8 @@ objects:
            value: ${APP_NAME}
          - name: "APP_GIT_URL"
            value: ${APP_GIT_URL}
+         - name: "BRANCH"
+           value: ${BRANCH}
      output:
        to:
          kind: "ImageStreamTag"
@@ -50,4 +52,8 @@ parameters:
 - description: Sufix
   displayName: Sufix
   name: SUFIX
+  value: ''
+- description: Branch
+  displayName: Branch
+  name: BRANCH
   value: ''

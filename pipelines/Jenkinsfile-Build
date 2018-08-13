@@ -58,16 +58,8 @@ pipeline {
             env.REQUIRES_DIRECT_PROMOTION = 'N'
             env.VERSION = 'DEVELOP'
           } else {
-            echo 'Env = Nenhum'
-            env.REQUIRES_BUILD = 'N'
-            env.REQUIRES_DEPLOYMENT = 'N'
-            env.REQUIRES_APPROVAL = 'N'
-            env.REQUIRES_PROMOTION = 'N'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-            env.VERSION = 'NONE'
+            error "Erro: A branch ${branch} não é válida!"
           }
-
-          sh 'printenv'
         }
       }
     }
@@ -78,6 +70,9 @@ pipeline {
       steps {
         script {
           echo "Excutando o build da aplicação..."
+          withMaven(mavenSettingsConfig: 'maven-settings') {
+            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
+          }
         }
       }
     }

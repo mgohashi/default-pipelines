@@ -31,6 +31,7 @@ pipeline {
       stage('Configurar Pipeline') {
         steps {
           script {
+            env.ARTIFACT_ID = getArtifactIdFromPom()
             def branch = "${BRANCH}"
 
             if (branch == 'master') {
@@ -47,7 +48,7 @@ pipeline {
               env.REQUIRES_APPROVAL = 'N'
               env.REQUIRES_PROMOTION = 'Y'
               env.REQUIRES_DIRECT_PROMOTION = 'N'
-              env.VERSION = branch.replaceAll('^release/', '')
+              env.VERSION = branch.replaceAll('^release/', '') + "-" + "${BUILD_ID}"
             } else if (branch.matches('^hotfix/.+$')) {
               echo 'Env = Hotfix'
               env.REQUIRES_BUILD = 'Y'
@@ -55,7 +56,7 @@ pipeline {
               env.REQUIRES_APPROVAL = 'Y'
               env.REQUIRES_PROMOTION = 'Y'
               env.REQUIRES_DIRECT_PROMOTION = 'Y'
-              env.VERSION = branch.replaceAll('^hotfix/', '')
+              env.VERSION = branch.replaceAll('^hotfix/', '') + "-" + "${BUILD_ID}"
             } else if (branch == 'develop') {
               echo 'Env = Desenvolvimento'
               env.REQUIRES_BUILD = 'Y'
@@ -63,7 +64,7 @@ pipeline {
               env.REQUIRES_APPROVAL = 'N'
               env.REQUIRES_PROMOTION = 'N'
               env.REQUIRES_DIRECT_PROMOTION = 'N'
-              env.VERSION = 'DEVELOP'
+              env.VERSION = getVersionFromPom()
             } else {
               error "Erro: A branch ${branch} não é válida!"
             }
@@ -126,13 +127,18 @@ pipeline {
       }
       stage('Updating Release') {
         when {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
+          allOf {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
+            //IMPORTANTE:
+            //Necessario apenas branch develop, pois a master ja sera ignorada pela flag REQUIRES_BUILD.
+            not { environment name: 'BRANCH', value: 'develop' }
+          }
         }
         steps {
           script {
             echo "Exportando para o nexus..."
             withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION}.${BUILD_ID} versions:set"
+              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION} versions:set"
               sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit versions:commit"
             }
           }

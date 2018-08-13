@@ -31,7 +31,6 @@ pipeline {
       stage('Configurar Pipeline') {
         steps {
           script {
-            env.ARTIFACT_ID = getArtifactIdFromPom()
             def branch = "${BRANCH}"
 
             if (branch == 'master') {
@@ -43,6 +42,7 @@ pipeline {
               env.REQUIRES_DIRECT_PROMOTION = 'N'
             } else if (branch.matches('^release/.+$')) {
               echo 'Env = Homologação'
+              env.ARTIFACT_ID = getArtifactIdFromPom()
               env.REQUIRES_BUILD = 'Y'
               env.REQUIRES_DEPLOYMENT = 'Y'
               env.REQUIRES_APPROVAL = 'N'
@@ -51,6 +51,7 @@ pipeline {
               env.VERSION = branch.replaceAll('^release/', '') + "-" + "${BUILD_ID}"
             } else if (branch.matches('^hotfix/.+$')) {
               echo 'Env = Hotfix'
+              env.ARTIFACT_ID = getArtifactIdFromPom()
               env.REQUIRES_BUILD = 'Y'
               env.REQUIRES_DEPLOYMENT = 'Y'
               env.REQUIRES_APPROVAL = 'Y'
@@ -59,6 +60,7 @@ pipeline {
               env.VERSION = branch.replaceAll('^hotfix/', '') + "-" + "${BUILD_ID}"
             } else if (branch == 'develop') {
               echo 'Env = Desenvolvimento'
+              env.ARTIFACT_ID = getArtifactIdFromPom()
               env.REQUIRES_BUILD = 'Y'
               env.REQUIRES_DEPLOYMENT = 'Y'
               env.REQUIRES_APPROVAL = 'N'

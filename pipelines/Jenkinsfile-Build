@@ -15,152 +15,136 @@ pipeline {
   agent "any"
 
   stages {
-    stage('Checkout') {
-      agent {
-        node { label 'jenkinsMavenSlave' }
-      }
-      steps {
-        script {
-          echo "Checkout do código fonte de ${APP_GIT_URL}..."
-          git url: "${APP_GIT_URL}", branch: "${BRANCH}"
+    node ('jenkinsMavenSlave') {
+      stage('Checkout') {
+        steps {
+          script {
+            echo "Checkout do código fonte de ${APP_GIT_URL}..."
+            git url: "${APP_GIT_URL}", branch: "${BRANCH}"
+          }
         }
       }
-    }
-    stage('Configurar Pipeline') {
-      agent {
-        node { label 'jenkinsMavenSlave' }
-      }
-      steps {
-        script {
-          def branch = "${BRANCH}"
+      stage('Configurar Pipeline') {
+        steps {
+          script {
+            def branch = "${BRANCH}"
 
-          if (branch == 'master') {
-            echo 'Env = Produção'
-            env.REQUIRES_BUILD = 'N'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'Y'
-            env.REQUIRES_PROMOTION = 'N'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-          } else if (branch.matches('^release/.+$')) {
-            echo 'Env = Homologação'
-            env.REQUIRES_BUILD = 'Y'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'N'
-            env.REQUIRES_PROMOTION = 'Y'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-            env.VERSION = branch.replaceAll('^release/', '')
-          } else if (branch.matches('^hotfix/.+$')) {
-            echo 'Env = Hotfix'
-            env.REQUIRES_BUILD = 'Y'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'Y'
-            env.REQUIRES_PROMOTION = 'Y'
-            env.REQUIRES_DIRECT_PROMOTION = 'Y'
-            env.VERSION = branch.replaceAll('^hotfix/', '')
-          } else if (branch == 'develop') {
-            echo 'Env = Desenvolvimento'
-            env.REQUIRES_BUILD = 'Y'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'N'
-            env.REQUIRES_PROMOTION = 'N'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-            env.VERSION = 'DEVELOP'
-          } else {
-            error "Erro: A branch ${branch} não é válida!"
-          }
-          sh 'printenv'
-        }
-      }
-    }
-    stage('Build') {
-      agent {
-        node { label 'jenkinsMavenSlave' }
-      }
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Excutando o build da aplicação..."
-          if ("${DEBUG_WORKFLOW}" == "N") {
-            withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
+            if (branch == 'master') {
+              echo 'Env = Produção'
+              env.REQUIRES_BUILD = 'N'
+              env.REQUIRES_DEPLOYMENT = 'Y'
+              env.REQUIRES_APPROVAL = 'Y'
+              env.REQUIRES_PROMOTION = 'N'
+              env.REQUIRES_DIRECT_PROMOTION = 'N'
+            } else if (branch.matches('^release/.+$')) {
+              echo 'Env = Homologação'
+              env.REQUIRES_BUILD = 'Y'
+              env.REQUIRES_DEPLOYMENT = 'Y'
+              env.REQUIRES_APPROVAL = 'N'
+              env.REQUIRES_PROMOTION = 'Y'
+              env.REQUIRES_DIRECT_PROMOTION = 'N'
+              env.VERSION = branch.replaceAll('^release/', '')
+            } else if (branch.matches('^hotfix/.+$')) {
+              echo 'Env = Hotfix'
+              env.REQUIRES_BUILD = 'Y'
+              env.REQUIRES_DEPLOYMENT = 'Y'
+              env.REQUIRES_APPROVAL = 'Y'
+              env.REQUIRES_PROMOTION = 'Y'
+              env.REQUIRES_DIRECT_PROMOTION = 'Y'
+              env.VERSION = branch.replaceAll('^hotfix/', '')
+            } else if (branch == 'develop') {
+              echo 'Env = Desenvolvimento'
+              env.REQUIRES_BUILD = 'Y'
+              env.REQUIRES_DEPLOYMENT = 'Y'
+              env.REQUIRES_APPROVAL = 'N'
+              env.REQUIRES_PROMOTION = 'N'
+              env.REQUIRES_DIRECT_PROMOTION = 'N'
+              env.VERSION = 'DEVELOP'
+            } else {
+              error "Erro: A branch ${branch} não é válida!"
             }
+            sh 'printenv'
           }
         }
       }
-    }
-    stage('Testes Unitários') {
-      agent {
-        node { label 'jenkinsMavenSlave' }
-      }
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Executando testes unitários..."
-          if ("${DEBUG_WORKFLOW}" == "N") {
-            withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
-            }
-          }
+      stage('Build') {
+        when {
+          environment name: 'REQUIRES_BUILD', value: 'Y'
         }
-      }
-    }
-    stage('Analise Estática') {
-      agent {
-        node { label 'jenkinsMavenSlave' }
-      }
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Executando análise estática..."
-          if ("${DEBUG_WORKFLOW}" == "N") {
-            withSonarQubeEnv('Sonar 6.4') {
-              sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
-            }
-
-            timeout(time: 1, unit: 'HOURS') {
-              def qg = waitQualityGate()
-              
-              if (qg.status != 'OK') {
-                error "Falha devido má qualidade do código.\nStatus da análise: ${qg.status}"
+        steps {
+          script {
+            echo "Excutando o build da aplicação..."
+            if ("${DEBUG_WORKFLOW}" == "N") {
+              withMaven(mavenSettingsConfig: 'maven-settings') {
+                sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
               }
             }
           }
         }
       }
-    }
-    stage('Exportar para Nexus') {
-      agent {
-        node { label 'jenkinsMavenSlave' }
-      }
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Exportando para o nexus..."
-          
-        }
-      }
-    }
-    stage('Build de Imagem') {
-      when {
-        allOf {
+      stage('Testes Unitários') {
+        when {
           environment name: 'REQUIRES_BUILD', value: 'Y'
-          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+        }
+        steps {
+          script {
+            echo "Executando testes unitários..."
+            if ("${DEBUG_WORKFLOW}" == "N") {
+              withMaven(mavenSettingsConfig: 'maven-settings') {
+                sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
+              }
+            }
+          }
         }
       }
-      steps {
-        script {
-          echo "Fazendo build da imagem..."
+      stage('Analise Estática') {
+        when {
+          environment name: 'REQUIRES_BUILD', value: 'Y'
         }
-      }//steps
-    }//stage
+        steps {
+          script {
+            echo "Executando análise estática..."
+            if ("${DEBUG_WORKFLOW}" == "N") {
+              withSonarQubeEnv('Sonar 6.4') {
+                sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+              }
+
+              timeout(time: 1, unit: 'HOURS') {
+                def qg = waitQualityGate()
+                
+                if (qg.status != 'OK') {
+                  error "Falha devido má qualidade do código.\nStatus da análise: ${qg.status}"
+                }
+              }
+            }
+          }
+        }
+      }
+      stage('Exportar para Nexus') {
+        when {
+          environment name: 'REQUIRES_BUILD', value: 'Y'
+        }
+        steps {
+          script {
+            echo "Exportando para o nexus..."
+            
+          }
+        }
+      }
+      stage('Build de Imagem') {
+        when {
+          allOf {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
+            environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+          }
+        }
+        steps {
+          script {
+            echo "Fazendo build da imagem..."
+          }
+        }//steps
+      }//stage
+    }//node
     stage('Aprovação') {
       agent none
       when {

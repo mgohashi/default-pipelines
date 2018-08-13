@@ -56,4 +56,4 @@ parameters:
 - description: Branch
   displayName: Branch
   name: BRANCH
-  value: ''
+  value: 'develp'

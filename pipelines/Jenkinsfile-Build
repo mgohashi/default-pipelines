@@ -108,6 +108,7 @@ pipeline {
             withSonarQubeEnv('Sonar 6.4') {
               sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
             }
+            
             timeout(time: 1, unit: 'HOURS') {
               def qg = waitQualityGate()
               

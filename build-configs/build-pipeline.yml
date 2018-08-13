@@ -32,6 +32,8 @@ objects:
            value: ${APP_GIT_URL}
          - name: "BRANCH"
            value: ${BRANCH}
+         - name: "VERSION"
+           value: "${VERSION}"
      output:
        to:
          kind: "ImageStreamTag"

@@ -1,10 +1,20 @@
 @Library('funcoes-auxiliares') _
 
+def getTag = {tagName, appName -> 
+    def result = openshift.selector("is/${appName}").object()
+    return result['status'].tags.find { it.tag == tagName }
+}
+
+def getLatestVersionFromDC = {deployment -> 
+	return deployment.narrow("dc").object().status.latestVersion
+}
+
 pipeline {
   environment {
     PRODUCT_OWNERS_GROUP = 'P_IJK_APROVADOR_PRODUCAO'
     APPROVERS_GROUP = 'P_IJK_LIBERACAO_PRODUCAO'
     DEPLOYERS_GROUP = 'P_IJK_OPERADOR_PRODUCAO'
+    DOMAIN_NAME = 'cloud.sfb'
 
     //PRODUCT_OWNERS_GROUP = 'gestores'
     //APPROVERS_GROUP = 'aprovadores'
@@ -12,286 +22,463 @@ pipeline {
     //DEBUG_WORKFLOW = "${ENABLE_DEBUG_WORKFLOW}"
   }
 
-  agent {
-    node { label 'jenkinsMavenSlave' }
-  }
+  agent none
 
   stages {
-    stage('Checkout') {
-      when {
-        not { environment name: 'BRANCH', value: 'master' }
+    stage('CI') {
+      agent {
+        node { label 'jenkinsMavenSlave' }
       }
-      steps {
-        script {
-          echo "Checkout do código fonte de ${APP_GIT_URL}..."
-          git url: "${APP_GIT_URL}", branch: "${BRANCH}"
-        }
-      }
-    }
-    stage('Configurar Pipeline') {
-      steps {
-        script {
-          def branch = "${BRANCH}"
+      stages {
+        stage('Configurar Pipeline') {
+          steps {
+            script {
+              def branch = "${BRANCH}"
 
-          if (branch == 'master') {
-            echo 'Env = Produção'
+              if (branch == 'master') {
+                echo 'Env = Produção'
 
-            if ("${env.VERSION}" == "XX") {
-              error "Erro de Validação: VERSION cannot be null!"
-            }
-
-            env.NAMESPACE = "${NAMESPACE_PRD}"
-            env.REQUIRES_BUILD = 'N'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'Y'
-            env.REQUIRES_PROMOTION = 'N'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-          } else if (branch.matches('^release/.+$')) {
-            echo 'Env = Homologação'
-            env.NAMESPACE = "${NAMESPACE_HML}"
-            env.ARTIFACT_ID = getArtifactIdFromPom()
-            env.REQUIRES_BUILD = 'Y'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'N'
-            env.REQUIRES_PROMOTION = 'Y'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-            env.VERSION = branch.replaceAll('^release/', '') + "-" + "${BUILD_ID}"
-          } else if (branch.matches('^hotfix/.+$')) {
-            echo 'Env = Hotfix'
-            env.NAMESPACE = "${NAMESPACE_HML}"
-            env.ARTIFACT_ID = getArtifactIdFromPom()
-            env.REQUIRES_BUILD = 'Y'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'Y'
-            env.REQUIRES_PROMOTION = 'Y'
-            env.REQUIRES_DIRECT_PROMOTION = 'Y'
-            env.VERSION = branch.replaceAll('^hotfix/', '') + "-" + "${BUILD_ID}"
-          } else if (branch == 'develop') {
-            echo 'Env = Desenvolvimento'
-            env.NAMESPACE = "${NAMESPACE_DEV}"
-            env.ARTIFACT_ID = getArtifactIdFromPom()
-            env.REQUIRES_BUILD = 'Y'
-            env.REQUIRES_DEPLOYMENT = 'Y'
-            env.REQUIRES_APPROVAL = 'N'
-            env.REQUIRES_PROMOTION = 'N'
-            env.REQUIRES_DIRECT_PROMOTION = 'N'
-            env.VERSION = getVersionFromPom()
-          } else {
-            error "Erro de Validação: A branch ${branch} não é válida!"
-          }
-          sh 'printenv'
-        }
-      }
-    }
-    stage('Build') {
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Excutando o build da aplicação..."
-          if ("${DEBUG_WORKFLOW}" == "N") {
-            withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
+                if ("${env.VERSION}" == "XX") {
+                  error "Erro de Validação: VERSION cannot be null!"
+                }
+                env.ENVIRONMENT = "prd"
+                env.NAMESPACE = "${NAMESPACE_PRD}"
+                env.REQUIRES_BUILD = 'N'
+                env.REQUIRES_DEPLOYMENT = 'Y'
+                env.REQUIRES_APPROVAL = 'Y'
+                env.REQUIRES_PROMOTION = 'N'
+                env.REQUIRES_DIRECT_PROMOTION = 'N'
+              } else if (branch.matches('^release/.+$')) {
+                echo 'Env = UAT'
+                env.ENVIRONMENT = "uat"
+                env.NAMESPACE = "${NAMESPACE_UAT}"
+                env.REQUIRES_BUILD = 'Y'
+                env.REQUIRES_DEPLOYMENT = 'Y'
+                env.REQUIRES_APPROVAL = 'N'
+                env.REQUIRES_PROMOTION = 'Y'
+                env.REQUIRES_DIRECT_PROMOTION = 'N'
+              } else if (branch.matches('^hotfix/.+$')) {
+                echo 'Env = Hotfix'
+                env.ENVIRONMENT = "uat"
+                env.NAMESPACE = "${NAMESPACE_UAT}"
+                env.REQUIRES_BUILD = 'Y'
+                env.REQUIRES_DEPLOYMENT = 'Y'
+                env.REQUIRES_APPROVAL = 'Y'
+                env.REQUIRES_PROMOTION = 'Y'
+                env.REQUIRES_DIRECT_PROMOTION = 'Y'
+              } else if (branch == 'develop') {
+                echo 'Env = Desenvolvimento'
+                env.ENVIRONMENT = "dev"
+                env.NAMESPACE = "${NAMESPACE_DEV}"
+                env.REQUIRES_BUILD = 'Y'
+                env.REQUIRES_DEPLOYMENT = 'Y'
+                env.REQUIRES_APPROVAL = 'N'
+                env.REQUIRES_PROMOTION = 'N'
+                env.REQUIRES_DIRECT_PROMOTION = 'N'
+              } else {
+                error "Erro de Validação: A branch ${branch} não é válida!"
+              }
+              sh 'printenv'
             }
           }
         }
-      }
-    }
-    stage('Testes Unitários') {
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Executando testes unitários..."
-          if ("${DEBUG_WORKFLOW}" == "N") {
-            withMaven(mavenSettingsConfig: 'maven-settings') {
-              sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
+        stage('Checkout') {
+          when {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
+          }
+          steps {
+            script {
+              echo "Checkout do código fonte de ${APP_GIT_URL}..."
+              git url: "${APP_GIT_URL}", branch: "${BRANCH}", credentialsId: 'gogs-jenkins'
             }
           }
         }
-      }
-    }
-    stage('Analise Estática') {
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Executando análise estática..."
-          if ("${DEBUG_WORKFLOW}" == "N") {
-            withSonarQubeEnv('Sonar 6.4') {
-              sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
-            }
+        stage('Configurar Build') {
+          when {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
+          }
+          steps {
+            script {
+              def branch = "${BRANCH}"
 
-            timeout(time: 1, unit: 'HOURS') {
-              def qg = waitQualityGate()
-              
-              if (qg.status != 'OK') {
-                error "Falha devido má qualidade do código.\nStatus da análise: ${qg.status}"
+              if (branch.matches('^release/.+$')) {
+                env.VERSION = branch.replaceAll('^release/', '') + "-" + "${BUILD_ID}"
+              } else if (branch.matches('^hotfix/.+$')) {
+                echo 'Env = Hotfix'
+                env.VERSION = branch.replaceAll('^hotfix/', '') + "-" + "${BUILD_ID}"
+              } else if (branch == 'develop') {
+                env.VERSION = getVersionFromPom()
+              } else {
+                error "Erro de Validação: A branch ${branch} não é válida!"
+              }
+
+              env.ARTIFACT_ID = getArtifactIdFromPom()
+              sh 'printenv'
+            }
+          }
+        }
+        stage('Build') {
+          when {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
+          }
+          steps {
+            script {
+              echo "Excutando o build da aplicação..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                withMaven(mavenSettingsConfig: 'maven-settings') {
+                  sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit compile"
+                }
               }
             }
           }
         }
-      }
-    }
-    stage('Updating Release') {
-      when {
-        allOf {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
-          //IMPORTANTE:
-          //Necessario apenas branch develop, pois a master ja sera ignorada pela flag REQUIRES_BUILD.
-          not { environment name: 'BRANCH', value: 'develop' }
-        }
-      }
-      steps {
-        script {
-          echo "Exportando para o nexus..."
-          withMaven(mavenSettingsConfig: 'maven-settings') {
-            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION} versions:set"
-            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit versions:commit"
+        stage('Testes Unitários') {
+          when {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
           }
-        }
-      }
-    }
-    stage('Exportar para Nexus') {
-      when {
-        environment name: 'REQUIRES_BUILD', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Exportando para o nexus..."
-          withMaven(mavenSettingsConfig: 'maven-settings') {
-            sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit deploy"
-          }
-        }
-      }
-    }
-    stage('Create Image Builder') {
-      when {
-        allOf {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
-          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-        }
-      }
-      steps {
-        script {
-          openshift.withCluster() {
-            openshift.withProject("${NAMESPACE}") {
-              echo "Criando build config da imagem final..."
-              if (!openshift.selector("bc", "${APP_NAME}").exists()) {
-                openshift.newBuild("--name=${APP_NAME}", "--image-stream=fis-introscope:latest", "--binary")
+          steps {
+            script {
+              echo "Executando testes unitários..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                withMaven(mavenSettingsConfig: 'maven-settings') {
+                  sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit test"
+                }
               }
             }
           }
         }
-      }
-    }
-    stage('Build de Imagem') {
-      when {
-        allOf {
-          environment name: 'REQUIRES_BUILD', value: 'Y'
-          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-        }
-      }
-      steps {
-        script {
-          echo "Fazendo build da imagem..."
-          openshift.withCluster() {
-            openshift.withProject("${NAMESPACE}") {
-              openshift.tag("${APP_NAME}:latest", "${APP_NAME}:${VERSION}")
-            }
+        stage('Analise Estática') {
+          when {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
           }
-        }
-      }//steps
-    }//stage
-    stage('Aprovação') {
-      when {
-        allOf { 
-          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-          environment name: 'REQUIRES_APPROVAL', value: 'Y'
-          environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
-        }
-      }
-      steps {
-        script {
-          def branch = params.BRANCH
-          def groupToApprove = env.PRODUCT_OWNERS_GROUP
+          steps {
+            script {
+              echo "Executando análise estática..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                withSonarQubeEnv('Sonar 6.4') {
+                  sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+                }
 
-          if (branch == 'master') {
-              groupToApprove = env.DEPLOYERS_GROUP
-          }
-
-          input(
-              message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
-              ok: "Sim, gostaria.",
-              submitter: groupToApprove,
-              submitterParameter: "USERNAME"
-          )
-        }
-      }//steps
-    }//stage
-    stage('Deploy') {
-      when {
-        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-        environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
-      }
-      steps {
-        script {
-          echo "Executando deployment..."
-        }
-      }//steps
-    }//stage
-    stage('Promover') {
-      when {
-        allOf {
-          environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-          environment name: 'REQUIRES_PROMOTION', value: 'Y'
-        }
-      }
-      steps {
-        script {
-          input(
-              message: "Você gostaria de liberar a promoção da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
-              ok: "Sim, gostaria.",
-              submitter: env.APPROVERS_GROUP,
-              submitterParameter: "USERNAME"
-          )
-        }
-      }//steps
-    }//stage
-    stage('Promover Imagem') {
-      when {
-        environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
-        environment name: 'REQUIRES_PROMOTION', value: 'Y'
-      }
-      steps {
-        script {
-          echo "Promover Imagem..."
-          openshift.withCluster() {
-            openshift.withProject("${NAMESPACE_PRD}") {
-              echo "Usando projeto: ${NAMESPACE_PRD}"
-              
-              echo "Selecionando build config ${APP_NAME}-pipeline"
-
-              def build = openshift.selector("bc", "${APP_NAME}-pipeline")
-
-              if (build.exists()) {
-                echo "Starting build config ${APP_NAME}..."
-                build.startBuild("-e", "BRANCH=master", "-e", "VERSION=${VERSION}")
+                timeout(time: 1, unit: 'HOURS') {
+                  def qg = waitQualityGate()
+                  
+                  if (qg.status != 'OK') {
+                    error "Falha devido má qualidade do código.\nStatus da análise: ${qg.status}"
+                  }
+                }
               }
             }
           }
         }
-      }//steps
-    }//stage
-    stage('Finalizando') {
-      steps {
-        script {
-          echo "Finalizando..."
+        stage('Atualizando Release') {
+          when {
+            allOf {
+              //IMPORTANTE:
+              //Necessario apenas branch develop, pois a master ja sera ignorada pela flag REQUIRES_BUILD.
+              not { environment name: 'BRANCH', value: 'develop' }
+              environment name: 'REQUIRES_BUILD', value: 'Y'
+            }
+          }
+          steps {
+            script {
+              echo "Exportando para o nexus..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                withMaven(mavenSettingsConfig: 'maven-settings') {
+                  sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit -DnewVersion=${VERSION} versions:set"
+                  sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit versions:commit"
+                }
+              }
+            }
+          }
         }
-      }
-    }
+        stage('Exportar para Nexus') {
+          when {
+            environment name: 'REQUIRES_BUILD', value: 'Y'
+          }
+          steps {
+            script {
+              echo "Exportando para o nexus..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                withMaven(mavenSettingsConfig: 'maven-settings') {
+                  sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit deploy"
+                  stash includes: 'target/*.jar', name: 'artifact-stash'
+                }
+              }
+            }
+          }
+        }
+      }//stage
+    }//stages
+    stage("CD") {
+      stages {
+        stage('Provisisonar Image Builder') {
+          when {
+            allOf {
+              environment name: 'REQUIRES_BUILD', value: 'Y'
+              environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+            }
+          }
+          agent "any"
+          steps {
+            script {
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE}") {
+                    echo "Criando build config da imagem final..."
+                    if (!openshift.selector("bc", "${APP_NAME}").exists()) {
+                      openshift.newBuild("--name=${APP_NAME}", "--image-stream=${IMAGE_STREAM}", "--binary")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        stage('Build da Imagem') {
+          when {
+            allOf {
+              environment name: 'REQUIRES_BUILD', value: 'Y'
+              environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+            }
+          }
+          agent "any"
+          steps {
+            script {
+              echo "Fazendo build da imagem..."
+              unstash 'artifact-stash'
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE}") {
+                    openshift.selector("bc", "${APP_NAME}").startBuild("--from-file=target/${ARTIFACT_ID}-${VERSION}.jar", "--wait")
+                  }
+                }
+              }
+            }
+          }//steps
+        }//stage
+        stage('Tag da Imagem') {
+          when {
+            allOf {
+              environment name: 'REQUIRES_BUILD', value: 'Y'
+              environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+            }
+          }
+          agent "any"
+          steps {
+            script {
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE}") {
+                    openshift.tag("${APP_NAME}:latest", "${APP_NAME}:${VERSION}")
+                  }
+                }
+              }
+            }
+          }
+        }
+        stage('Provisisonar ConfigMaps/Secrets') {
+          when {
+            anyOf {
+              not { environment name: 'CONFIGMAP_URL', value: '' }
+              not { environment name: 'SECRET_URL', value: '' }
+            }
+          }
+          agent "any"
+          steps {
+            script {
+              openshift.withCluster() {
+                openshift.withProject("${NAMESPACE}") {
+                  withCredentials([usernamePassword(credentialsId: 'gogs-jenkins', passwordVariable: 'GOGS_PASSWORD', 
+                    usernameVariable: 'GOGS_USERNAME')]) {
+                    if ("${DEBUG_WORKFLOW}" == "N") {
+                      if ("${CONFIGMAP_URL}" != "") {
+                        def config_map_url_result = "${CONFIGMAP_URL}".replaceAll('\\\$\\{jenkins_user\\}', "${env.GOGS_USERNAME}")
+                                                    .replaceAll('\\\$\\{jenkins_pwd\\}', "${env.GOGS_PASSWORD}")
+                        retry(3) {
+                          sh "curl -k ${config_map_url_result} > configmap.yml"
+                        }
+
+                        if (!openshift.selector('configmap', "${APP_NAME}").exists()) {
+                          openshift.create('-f', "./configmap.yml", '--save-config', '--validate')
+                        } else {
+                          openshift.replace('-f', "./configmap.yml", '--force', '--save-config')
+                        }
+                      }//if
+                      if ("${SECRET_URL}" != "") {
+                        def secret_url_result = "${SECRET_URL}".replaceAll('\\\$\\{jenkins_user\\}', "${env.GOGS_USERNAME}")
+                                                    .replaceAll('\\\$\\{jenkins_pwd\\}', "${env.GOGS_PASSWORD}")
+                        retry(3) {
+                          sh "curl -k ${secret_url_result} > secret.yml"
+                        }
+
+                        if (!openshift.selector('secret', "${APP_NAME}").exists()) {
+                          openshift.create('-f', "./secret.yml", '--save-config', '--validate')
+                        } else {
+                          openshift.replace('-f', "./secret.yml", '--force', '--save-config', '--validate')
+                        }
+                        if (!openshift.selector('sa', "${APP_NAME}").exists()) {
+                          openshift.create('sa', "${APP_NAME}")
+                        }
+                        openshift.raw('policy', 'add-role-to-user', 'view', "system:serviceaccount:${NAMESPACE}:${APP_NAME}")
+                      }//if
+                    }//if
+                  }//withProject
+                }//withCluster
+              }//withCredentials
+            }//script
+          }//steps
+        }//stage
+        stage('Aprovar Deploy') {
+          when {
+            allOf { 
+              environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+              environment name: 'REQUIRES_APPROVAL', value: 'Y'
+              environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
+            }
+          }
+          steps {
+            script {
+              def branch = params.BRANCH
+              def groupToApprove = env.PRODUCT_OWNERS_GROUP
+
+              if (branch == 'master') {
+                  groupToApprove = env.DEPLOYERS_GROUP
+              }
+
+              input(
+                  message: "Você gostaria de aprovar o deployment da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
+                  ok: "Sim, gostaria.",
+                  submitter: groupToApprove,
+                  submitterParameter: "USERNAME"
+              )
+            }
+          }//steps
+        }//stage
+        stage('Deploy') {
+          when {
+            environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+            environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
+          }
+          agent "any"
+          steps {
+            script {
+              echo "Executando deployment..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.verbose(true)
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE}") {
+                    def result = openshift.process("${TEMPLATE}", "-p=APP_NAME=${APP_NAME}", 
+                      "-p=NAMESPACE=${NAMESPACE}", "-p=TAG_NAME=${VERSION}", "-p=ENVIRONMENT=${ENVIRONMENT}", "-p=FQDN=${DOMAIN_NAME}",
+                      "-p=SERVICE_ACCOUNT=${APP_NAME}", "-p=INTROSCOPE_SERVER_NAME=${INTROSCOPE_SERVER_NAME}", "-p=TOKEN=${TOKEN}")
+                    
+                    def latestDeploymentVersion = getLatestVersionFromDC(openshift.apply(result))
+                    
+                    echo "Verificando Deployment da aplicação: ${APP_NAME}-${latestDeploymentVersion}"
+
+                    def rc = openshift.selector('rc', "${APP_NAME}-${latestDeploymentVersion}")
+                    
+                    def rcMap = null
+                    def deployResult = false
+
+                    try {
+                      timeout(10) {
+                        rc.untilEach(1) {
+                            rcMap = it.object()
+                            echo ""
+                            echo ""
+                            echo "----------------------------------------------------------"
+                            echo "app-name: ${APP_NAME}/ latestDeploymentVersion=${latestDeploymentVersion}"
+                            echo "desired: ${rcMap.spec.replicas}/ current: ${rcMap.status.readyReplicas}"
+                            echo "----------------------------------------------------------"
+                            echo ""
+                            echo ""
+                            
+                            deployResult = (rcMap.spec.replicas.equals(rcMap.status.readyReplicas))
+
+                            return deployResult
+                        }//untilEach
+                      }//timeout
+                    } catch (all) {
+                      def annotations = rcMap.metadata.annotations
+                      def status = "${annotations['openshift.io/deployment.phase']}"
+                      def reason = "${annotations['openshift.io/deployment.status-reason']}"
+                      error "Falha no deployment status: ${status}, razão: ${reason}."
+                    }
+                  }//withProject
+                }//withCluster
+              }//if
+            }//script
+          }//steps
+        }//stage
+        stage('Liberar Promoção') {
+          when {
+            allOf {
+              environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+              environment name: 'REQUIRES_PROMOTION', value: 'Y'
+            }
+          }
+          steps {
+            script {
+              input(
+                  message: "Você gostaria de liberar a promoção da aplicação ${APP_NAME} - VERSAO: ${VERSION} - BUILD: ${BUILD_NUMBER}?",
+                  ok: "Sim, gostaria.",
+                  submitter: env.APPROVERS_GROUP,
+                  submitterParameter: "USERNAME"
+              )
+            }
+          }//steps
+        }//stage
+        stage('Promover Imagem') {
+          when {
+            environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+            environment name: 'REQUIRES_PROMOTION', value: 'Y'
+          }
+          agent "any"
+          steps {
+            script {
+              echo "Promover Imagem..."
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE_PRD}") {
+                    echo "Usando projeto: ${NAMESPACE_PRD}"
+
+                    retry(3) {
+                      openshift.raw("import-image", "${NAMESPACE_PRD}/${APP_NAME}:${VERSION}", 
+                        "--from=\'docker-registry.default.svc:5000/${NAMESPACE_UAT}/${APP_NAME}:${VERSION}\'", "--confirm")
+
+                      def tag = getTag("${VERSION}", "${APP_NAME}")
+
+                      if (tag == null) {
+                          error "Reason tag ${VERSION} not found in the target project '${NAMESPACE_PRD}'" 
+                      } else if (tag.items == null) {
+                          error "Reason ${tag.conditions[0].message} in the target project '${NAMESPACE_PRD}'"
+                      } else {
+                          echo "Tag '${VERSION}' importada com sucesso em '${tag.items[0].created}'"
+                      }
+
+                      echo "Selecionando build config ${APP_NAME}-pipeline"
+
+                      def build = openshift.selector("bc", "${APP_NAME}-pipeline")
+
+                      if (build.exists()) {
+                        echo "Starting build config ${APP_NAME}..."
+                        build.startBuild("-e", "BRANCH=master", "-e", "VERSION=${VERSION}")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }//steps
+        }//stage
+        stage('Finalizando') {
+          steps {
+            script {
+              echo "Finalizando..."
+            }
+          }
+        }
+      }//stages
+    }//stage
   }//stages
 }//pipeline

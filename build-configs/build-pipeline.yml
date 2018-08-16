@@ -15,15 +15,17 @@ objects:
    spec:
      source:
        git:
-         uri: "http://gogs-cicd-tools.cloud.sfb/banestes/default-pipelines"
+         uri: "https://gogs-cicd-tools.cloud.sfb/banestes/default-pipelines"
+       sourceSecret:
+         name: "gogs-secret"
      strategy:
        jenkinsPipelineStrategy:
          jenkinsfilePath: ${JENKINS_FILE}
          env:
          - name: "NAMESPACE_DEV"
            value: ${NAMESPACE_BASE}-dev
-         - name: "NAMESPACE_HML"
-           value: ${NAMESPACE_BASE}-hml
+         - name: "NAMESPACE_UAT"
+           value: ${NAMESPACE_BASE}-uat
          - name: "NAMESPACE_PRD"
            value: ${NAMESPACE_BASE}
          - name: "APP_NAME"
@@ -34,8 +36,22 @@ objects:
            value: ${BRANCH}
          - name: "VERSION"
            value: "${VERSION}"
+         - name: "CONFIGMAP_URL"
+           value: "${CONFIGMAP_URL}"
+         - name: "SECRET_URL"
+           value: ${SECRET_URL}
+         - name: "VERSION"
+           value: "${VERSION}"
          - name: "DEBUG_WORKFLOW"
            value: "${DEBUG_WORKFLOW}"
+         - name: "INTROSCOPE_SERVER_NAME"
+           value: "${INTROSCOPE_SERVER_NAME}"
+         - name: "IMAGE_STREAM"
+           value: "${IMAGE_STREAM}"
+         - name: "TEMPLATE"
+           value: "${TEMPLATE}"
+         - name: "TOKEN"
+           value: "${TOKEN}"
 parameters:
 - description: Application Name
   displayName: Application Name
@@ -61,7 +77,31 @@ parameters:
   displayName: Version
   name: VERSION
   value: 'XX'
+- description: ConfigMap URL
+  displayName: ConfigMap URL
+  name: CONFIGMAP_URL
+  value: 'NONE'
+- description: Secret URL
+  displayName: Secret URL
+  name: SECRET_URL
+  value: 'NONE'
 - description: Debug workflow (Y/N)
   displayName: Debug workflow
   name: DEBUG_WORKFLOW
   value: 'N'
+- description: Introscope Server Name
+  displayName: Introscope Server Name
+  name: INTROSCOPE_SERVER_NAME
+  value: 'demopolis.banestes.sfb'
+- description: ImageStream with version
+  displayName: ImageStream
+  name: IMAGE_STREAM
+  required: true
+- description: Template
+  displayName: Template
+  name: TEMPLATE
+  required: true
+- desciption: Token de autorização
+  displayName: Token de autorização
+  name: TOKEN
+  required: true

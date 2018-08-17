@@ -291,7 +291,7 @@ pipeline {
                   withCredentials([usernamePassword(credentialsId: 'gogs-jenkins', passwordVariable: 'GOGS_PASSWORD', 
                     usernameVariable: 'GOGS_USERNAME')]) {
                     if ("${DEBUG_WORKFLOW}" == "N") {
-                      if ("${CONFIGMAP_URL}" != "") {
+                      if ("${CONFIGMAP_URL}" != "" && "${CONFIGMAP_URL}" != "-") {
                         def config_map_url_result = "${CONFIGMAP_URL}".replaceAll('\\\$\\{jenkins_user\\}', "${env.GOGS_USERNAME}")
                                                     .replaceAll('\\\$\\{jenkins_pwd\\}', "${env.GOGS_PASSWORD}")
                         retry(3) {
@@ -304,7 +304,7 @@ pipeline {
                           openshift.replace('-f', "./configmap.yml", '--force', '--save-config')
                         }
                       }//if
-                      if ("${SECRET_URL}" != "") {
+                      if ("${SECRET_URL}" != "" && "${SECRET_URL}" != "-") {
                         def secret_url_result = "${SECRET_URL}".replaceAll('\\\$\\{jenkins_user\\}', "${env.GOGS_USERNAME}")
                                                     .replaceAll('\\\$\\{jenkins_pwd\\}', "${env.GOGS_PASSWORD}")
                         retry(3) {
@@ -369,35 +369,40 @@ pipeline {
                   openshift.withProject("${NAMESPACE}") {
                     def result = openshift.process("${TEMPLATE}", "-p=APP_NAME=${APP_NAME}", 
                       "-p=NAMESPACE=${NAMESPACE}", "-p=TAG_NAME=${VERSION}", "-p=ENVIRONMENT=${ENVIRONMENT}", "-p=FQDN=${DOMAIN_NAME}",
-                      "-p=SERVICE_ACCOUNT=${APP_NAME}", "-p=INTROSCOPE_SERVER_NAME=${INTROSCOPE_SERVER_NAME}", "-p=TOKEN=${TOKEN}")
+                      "-p=SERVICE_ACCOUNT=${APP_NAME}", "-p=INTROSCOPE_SERVER_NAME=${INTROSCOPE_SERVER_NAME}", "-p=TOKEN=${TOKEN}", 
+                      "-p=REPLICAS=${REPLICAS}")
                     
-                    def latestDeploymentVersion = getLatestVersionFromDC(openshift.apply(result))
+                    def dc = openshift.apply(result)
                     
-                    echo "Verificando Deployment da aplicação: ${APP_NAME}-${latestDeploymentVersion}"
-
-                    def rc = openshift.selector('rc', "${APP_NAME}-${latestDeploymentVersion}")
-                    
-                    def rcMap = null
-                    def deployResult = false
-
                     try {
-                      timeout(10) {
-                        rc.untilEach(1) {
-                            rcMap = it.object()
-                            echo ""
-                            echo ""
-                            echo "----------------------------------------------------------"
-                            echo "app-name: ${APP_NAME}/ latestDeploymentVersion=${latestDeploymentVersion}"
-                            echo "desired: ${rcMap.spec.replicas}/ current: ${rcMap.status.readyReplicas}"
-                            echo "----------------------------------------------------------"
-                            echo ""
-                            echo ""
-                            
-                            deployResult = (rcMap.spec.replicas.equals(rcMap.status.readyReplicas))
+                      retry(2) {
+                        def latestDeploymentVersion = getLatestVersionFromDC(dc)
+                        
+                        echo "Verificando Deployment da aplicação: ${APP_NAME}-${latestDeploymentVersion}"
 
-                            return deployResult
-                        }//untilEach
-                      }//timeout
+                        def rc = openshift.selector('rc', "${APP_NAME}-${latestDeploymentVersion}")
+                        
+                        def rcMap = null
+                        def deployResult = false
+
+                        timeout(10) {
+                          rc.untilEach(1) {
+                              rcMap = it.object()
+                              echo ""
+                              echo ""
+                              echo "----------------------------------------------------------"
+                              echo "app-name: ${APP_NAME}/ latestDeploymentVersion=${latestDeploymentVersion}"
+                              echo "desired: ${rcMap.spec.replicas}/ current: ${rcMap.status.readyReplicas}"
+                              echo "----------------------------------------------------------"
+                              echo ""
+                              echo ""
+                              
+                              deployResult = (rcMap.spec.replicas.equals(rcMap.status.readyReplicas))
+
+                              return deployResult
+                          }//untilEach
+                        }//timeout
+                      }//retry
                     } catch (all) {
                       def annotations = rcMap.metadata.annotations
                       def status = "${annotations['openshift.io/deployment.phase']}"

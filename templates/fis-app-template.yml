@@ -20,7 +20,7 @@ objects:
       project: ${APP_NAME}
     name: ${APP_NAME}
   spec:
-    replicas: 1
+    replicas: ${REPLICAS}
     selector:
       component: ${APP_NAME}
       deploymentconfig: ${APP_NAME}
@@ -207,3 +207,8 @@ parameters:
   name: TOKEN
   required: true
   value: "NECESSARIO_PASSAR_O_PARAMETRO_TOKEN_NO_PIPELINE"
+- description: Quantidade de replicas
+  displayName: Quantidade de replicas
+  name: REPLICAS
+  required: true
+  value: "1"

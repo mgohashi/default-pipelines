@@ -52,6 +52,8 @@ objects:
            value: "${TEMPLATE}"
          - name: "TOKEN"
            value: "${TOKEN}"
+         - name: "REPLICAS"
+           value: "${REPLICAS}"
 parameters:
 - description: Application Name
   displayName: Application Name
@@ -105,3 +107,7 @@ parameters:
   displayName: Token de autorização
   name: TOKEN
   required: true
+- description: Quantidade de replicas
+  displayName: Quantidade de replicas
+  name: REPLICAS
+  value: '1'

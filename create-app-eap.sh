@@ -60,6 +60,7 @@ oc process -f build-configs/build-pipeline.yml \
     -p IMAGE_STREAM=$IMAGE_STREAM \
     -p TEMPLATE=$TEMPLATE \
     -p TOKEN=$TOKEN \
+    -p REPLICAS=$REPLICAS_HML \
     | oc apply -n "${BASE_PRJ_NAME}-uat" -f -
 
 oc process -f build-configs/build-pipeline.yml \
@@ -72,5 +73,6 @@ oc process -f build-configs/build-pipeline.yml \
     -p IMAGE_STREAM=$IMAGE_STREAM \
     -p TEMPLATE=$TEMPLATE \
     -p TOKEN=$TOKEN \
+    -p REPLICAS=$REPLICAS_PRD \
     | oc apply -n "$BASE_PRJ_NAME" -f -
 

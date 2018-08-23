@@ -41,19 +41,21 @@ objects:
          - name: "SECRET_URL"
            value: ${SECRET_URL}
          - name: "VERSION"
-           value: "${VERSION}"
+           value: ${VERSION}
          - name: "DEBUG_WORKFLOW"
-           value: "${DEBUG_WORKFLOW}"
+           value: ${DEBUG_WORKFLOW}
          - name: "INTROSCOPE_SERVER_NAME"
-           value: "${INTROSCOPE_SERVER_NAME}"
+           value: ${INTROSCOPE_SERVER_NAME}
          - name: "IMAGE_STREAM"
            value: "${IMAGE_STREAM}"
-         - name: "TEMPLATE"
+         - name: TEMPLATE
            value: "${TEMPLATE}"
          - name: "TOKEN"
-           value: "${TOKEN}"
+           value: ${TOKEN}
          - name: "REPLICAS"
-           value: "${REPLICAS}"
+           value: ${REPLICAS}
+         - name: "ARTIFACT_TYPE"
+           value: ${ARTIFACT_TYPE}
 parameters:
 - description: Application Name
   displayName: Application Name
@@ -110,4 +112,8 @@ parameters:
 - description: Quantidade de replicas
   displayName: Quantidade de replicas
   name: REPLICAS
-  value: '1'
+  value: "1"
+- description: Tipo do artefato final (jar/war)
+  displayName: Tipo do artefato final
+  name: ARTIFACT_TYPE
+  required: true

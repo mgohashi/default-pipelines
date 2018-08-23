@@ -1,7 +1,8 @@
 #!/bin/sh
 
 IMAGE_STREAM='eap-custom-introscope:1.0'
-TEMPLATE='openshift//eap-custom-secret'
+TEMPLATE='openshift//eap-app-template'
+ARTIFACT_TYPE='war'
 
 invalid() {
     echo "Error: Invalid parameters!"
@@ -35,6 +36,15 @@ if [ "$APP_NAME" == "" ]; then
 fi
 
 echo "------------------------------------------------------------------------------------"
+echo "- ADICIONANDO POLICIES ADICIONAIS AOS PROJETOS                                     -"
+echo "------------------------------------------------------------------------------------"
+
+oc adm policy add-role-to-user system:image-puller \
+    system:serviceaccount:"${BASE_PRJ_NAME}:${APP_NAME}" -n "${BASE_PRJ_NAME}-uat" \
+    --rolebinding-name ${APP_NAME}-uat-to-prd-role --dry-run \
+    -o yaml | oc apply -n "${BASE_PRJ_NAME}-uat" -f -
+
+echo "------------------------------------------------------------------------------------"
 echo "- ADICIONANDO PIPELINES                                                            -"
 echo "------------------------------------------------------------------------------------"
 
@@ -48,6 +58,7 @@ oc process -f build-configs/build-pipeline.yml \
     -p IMAGE_STREAM=$IMAGE_STREAM \
     -p TEMPLATE=$TEMPLATE \
     -p TOKEN=$TOKEN \
+    -p ARTIFACT_TYPE=$ARTIFACT_TYPE \
     | oc apply -n "${BASE_PRJ_NAME}-dev" -f -
 
 oc process -f build-configs/build-pipeline.yml \
@@ -61,6 +72,7 @@ oc process -f build-configs/build-pipeline.yml \
     -p TEMPLATE=$TEMPLATE \
     -p TOKEN=$TOKEN \
     -p REPLICAS=$REPLICAS_HML \
+    -p ARTIFACT_TYPE=$ARTIFACT_TYPE \
     | oc apply -n "${BASE_PRJ_NAME}-uat" -f -
 
 oc process -f build-configs/build-pipeline.yml \
@@ -74,5 +86,6 @@ oc process -f build-configs/build-pipeline.yml \
     -p TEMPLATE=$TEMPLATE \
     -p TOKEN=$TOKEN \
     -p REPLICAS=$REPLICAS_PRD \
+    -p ARTIFACT_TYPE=$ARTIFACT_TYPE \
     | oc apply -n "$BASE_PRJ_NAME" -f -
 

@@ -54,11 +54,6 @@ echo "--------------------------------------------------------------------------
 echo "- ADICIONANDO POLICIES AOS PROJETOS                                                -"
 echo "------------------------------------------------------------------------------------"
 
-oc adm policy add-role-to-user system:image-puller \
-    system:serviceaccount:"${BASE_PRJ_NAME}:${APP_NAME}" -n "${BASE_PRJ_NAME}-uat" \
-    --rolebinding-name uat-to-prd-role --dry-run \
-    -o yaml | oc apply -n "${BASE_PRJ_NAME}-uat" -f -
-
 oc adm policy add-role-to-user admin \
     system:serviceaccount:"${JENKINS_PRJ_NAME}:jenkins" -n "${BASE_PRJ_NAME}"-dev \
     --rolebinding-name jenkins-admin-role --dry-run \

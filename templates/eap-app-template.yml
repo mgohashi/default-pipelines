@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: fis-app-template
+  template: eap-app-template
 metadata:
   annotations:
-    description: Fis S2I App Template
+    description: EAP S2I App Template
     iconClass: icon-jboss
-    tags: java,springboot,fis
+    tags: java,eap,secret
   creationTimestamp: null
-  name: fis-app-template
+  name: eap-app-template
 objects:
 - apiVersion: v1
   kind: DeploymentConfig
@@ -42,50 +42,39 @@ objects:
             value: ${APP_NAME}
           - name: INTROSCOPE_SERVER_NAME
             value: ${INTROSCOPE_SERVER_NAME}
-          - name: TOKEN
-            value: ${TOKEN}
           - name: TZ
             value: America/Sao_Paulo
           - name: KUBERNETES_NAMESPACE
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          - name: JAVA_TOOL_OPTIONS
-            value: "-Duser.home=/home/jboss -Duser.name=jboss -Dspring.cloud.kubernetes.secrets.paths=/etc/secret/${APP_NAME}"
+          - name: OPENSHIFT_KUBE_PING_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: OPENSHIFT_KUBE_PING_LABELS
+            value: ${APP_NAME}
+          envFrom:
+          - configMapRef:
+              name: ${APP_NAME}
+          - secretRef:
+              name: ${APP_NAME}
           image: library/${APP_NAME}:latest
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8081
-            initialDelaySeconds: 180
           name: ${APP_NAME}
           ports:
           - containerPort: 8080
             name: http
           - containerPort: 8778
             name: jolokia
-          - containerPort: 8081
-            name: management
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8081
-            initialDelaySeconds: 10
+          - containerPort: 8443
+            name: https
           resources:
             limits:
               cpu: ${CPU_LIMIT}
             requests:
               cpu: ${CPU_REQUEST}
-          volumeMounts:
-          - name: secret-volume
-            mountPath: /etc/secret/${APP_NAME}
-            readOnly: true
         nodeSelector:
           region: ${ENVIRONMENT}
-        volumes:
-        - name: secret-volume
-          secret:
-            secretName: ${APP_NAME}
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -105,22 +94,22 @@ objects:
       app: ${APP_NAME}
       component: ${APP_NAME}
       project: ${APP_NAME}
-      template: fis-custom
+      template: eap-custom
     name: ${APP_NAME}
   spec:
     ports:
-    - name: port-1
+    - name: 8080-tcp
       port: 8080
       protocol: TCP
       targetPort: 8080
-    - name: port-2
+    - name: 8443-tcp
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    - name: 8778-tcp
       port: 8778
       protocol: TCP
       targetPort: 8778
-    - name: port-3
-      port: 8081
-      protocol: TCP
-      targetPort: 8081
     selector:
       component: ${APP_NAME}
       deploymentconfig: ${APP_NAME}
@@ -137,13 +126,13 @@ objects:
       app: ${APP_NAME}
       component: ${APP_NAME}
       project: ${APP_NAME}
-      template: fis-custom
+      template: eap-custom
       router: interno
     name: ${APP_NAME}
   spec:
     host: ${APP_NAME}-${NAMESPACE}.${FQDN}
     port:
-      targetPort: port-1
+      targetPort: 8080-tcp
     to:
       kind: Service
       name: ${APP_NAME}

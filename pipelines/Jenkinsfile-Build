@@ -155,8 +155,10 @@ pipeline {
             script {
               echo "Executando análise estática..."
               if ("${DEBUG_WORKFLOW}" == "N") {
-                withSonarQubeEnv('Sonar 6.4') {
-                  sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+                withMaven(mavenSettingsConfig: 'maven-settings') {
+                  withSonarQubeEnv('Sonar 6.4') {
+                    sh 'mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit sonar:sonar'
+                  }
                 }
 
                 timeout(time: 1, unit: 'HOURS') {
@@ -191,7 +193,7 @@ pipeline {
             }
           }
         }
-        stage('Exportar para Nexus') {
+        stage('Exportar') {
           when {
             environment name: 'REQUIRES_BUILD', value: 'Y'
           }
@@ -201,7 +203,7 @@ pipeline {
               if ("${DEBUG_WORKFLOW}" == "N") {
                 withMaven(mavenSettingsConfig: 'maven-settings') {
                   sh "mvn -Djavax.net.ssl.trustStore=/opt/cacerts/cacerts -Djavax.net.ssl.trustStorePassword=changeit deploy"
-                  stash includes: 'target/*.jar', name: 'artifact-stash'
+                  stash includes: 'target/*.jar, target/*.war', name: 'artifact-stash'
                 }
               }
             }
@@ -211,7 +213,7 @@ pipeline {
     }//stages
     stage("CD") {
       stages {
-        stage('Provisisonar Image Builder') {
+        stage('Provisionar Image Builder') {
           when {
             allOf {
               environment name: 'REQUIRES_BUILD', value: 'Y'
@@ -249,7 +251,14 @@ pipeline {
               if ("${DEBUG_WORKFLOW}" == "N") {
                 openshift.withCluster() {
                   openshift.withProject("${NAMESPACE}") {
-                    openshift.selector("bc", "${APP_NAME}").startBuild("--from-file=target/${ARTIFACT_ID}-${VERSION}.jar", "--wait")
+                    def fileName = "target/${ARTIFACT_ID}-${VERSION}.jar"
+
+                    if ("${ARTIFACT_TYPE}" == "war") {
+                      sh "mv target/${ARTIFACT_ID}-${VERSION}.war target/ROOT.war"
+                      fileName = "target/ROOT.war"
+                    }
+
+                    openshift.selector("bc", "${APP_NAME}").startBuild("--from-file=${fileName}", "--wait")
                   }
                 }
               }
@@ -276,7 +285,7 @@ pipeline {
             }
           }
         }
-        stage('Provisisonar ConfigMaps/Secrets') {
+        stage('SA/ConfigMaps/Secrets') {
           when {
             anyOf {
               not { environment name: 'CONFIGMAP_URL', value: '' }
@@ -286,11 +295,17 @@ pipeline {
           agent "any"
           steps {
             script {
-              openshift.withCluster() {
-                openshift.withProject("${NAMESPACE}") {
-                  withCredentials([usernamePassword(credentialsId: 'gogs-jenkins', passwordVariable: 'GOGS_PASSWORD', 
-                    usernameVariable: 'GOGS_USERNAME')]) {
-                    if ("${DEBUG_WORKFLOW}" == "N") {
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE}") {
+                    if (!openshift.selector('sa', "${APP_NAME}").exists()) {
+                      openshift.create('sa', "${APP_NAME}")
+                    }
+                    openshift.raw('policy', 'add-role-to-user', 'view', "system:serviceaccount:${NAMESPACE}:${APP_NAME}",
+                    "--rolebinding-name", "${APP_NAME}-app-view")
+
+                    withCredentials([usernamePassword(credentialsId: 'gogs-jenkins', passwordVariable: 'GOGS_PASSWORD', 
+                      usernameVariable: 'GOGS_USERNAME')]) {
                       if ("${CONFIGMAP_URL}" != "" && "${CONFIGMAP_URL}" != "-") {
                         def config_map_url_result = "${CONFIGMAP_URL}".replaceAll('\\\$\\{jenkins_user\\}', "${env.GOGS_USERNAME}")
                                                     .replaceAll('\\\$\\{jenkins_pwd\\}', "${env.GOGS_PASSWORD}")
@@ -316,15 +331,11 @@ pipeline {
                         } else {
                           openshift.replace('-f', "./secret.yml", '--force', '--save-config', '--validate')
                         }
-                        if (!openshift.selector('sa', "${APP_NAME}").exists()) {
-                          openshift.create('sa', "${APP_NAME}")
-                        }
-                        openshift.raw('policy', 'add-role-to-user', 'view', "system:serviceaccount:${NAMESPACE}:${APP_NAME}")
                       }//if
-                    }//if
+                    }//withCredentials
                   }//withProject
                 }//withCluster
-              }//withCredentials
+              }//if
             }//script
           }//steps
         }//stage
@@ -364,13 +375,11 @@ pipeline {
             script {
               echo "Executando deployment..."
               if ("${DEBUG_WORKFLOW}" == "N") {
-                openshift.verbose(true)
                 openshift.withCluster() {
                   openshift.withProject("${NAMESPACE}") {
                     def result = openshift.process("${TEMPLATE}", "-p=APP_NAME=${APP_NAME}", 
                       "-p=NAMESPACE=${NAMESPACE}", "-p=TAG_NAME=${VERSION}", "-p=ENVIRONMENT=${ENVIRONMENT}", "-p=FQDN=${DOMAIN_NAME}",
-                      "-p=SERVICE_ACCOUNT=${APP_NAME}", "-p=INTROSCOPE_SERVER_NAME=${INTROSCOPE_SERVER_NAME}", "-p=TOKEN=${TOKEN}", 
-                      "-p=REPLICAS=${REPLICAS}")
+                      "-p=SERVICE_ACCOUNT=${APP_NAME}", "-p=INTROSCOPE_SERVER_NAME=${INTROSCOPE_SERVER_NAME}", "-p=TOKEN=${TOKEN}")
                     
                     def dc = openshift.apply(result)
                     
@@ -407,12 +416,58 @@ pipeline {
                       def annotations = rcMap.metadata.annotations
                       def status = "${annotations['openshift.io/deployment.phase']}"
                       def reason = "${annotations['openshift.io/deployment.status-reason']}"
-                      error "Falha no deployment status: ${status}, razão: ${reason}."
+                      error "Deployment executado, porém não foi possível verificar seu status: ${status}, razão: ${reason}."
                     }
                   }//withProject
                 }//withCluster
               }//if
             }//script
+          }//steps
+        }//stage
+        stage('Escalando') {
+          when {
+            environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
+            environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'
+          }
+          agent "any"
+          steps {
+            script {
+              if ("${DEBUG_WORKFLOW}" == "N") {
+                openshift.withCluster() {
+                  openshift.withProject("${NAMESPACE}") {
+                    def dc = openshift.selector("dc", "${APP_NAME}")
+                    def latestDeploymentVersion = getLatestVersionFromDC(dc)
+
+                    echo "Escalando a quantida de pods para a quantidade requerida ${REPLICAS}"
+                    dc.scale("--replicas=${REPLICAS}")
+
+                    echo "Verificando Deployment da aplicação: ${APP_NAME}-${latestDeploymentVersion}"
+                    def rc = openshift.selector('rc', "${APP_NAME}-${latestDeploymentVersion}")
+                    
+                    def rcMap = null
+                    def deployResult = false
+
+                    timeout(10) {
+                      rc.untilEach(1) {
+                          rcMap = it.object()
+                          echo ""
+                          echo ""
+                          echo "----------------------------------------------------------"
+                          echo "app-name: ${APP_NAME}/ latestDeploymentVersion=${latestDeploymentVersion}"
+                          echo "desired: ${rcMap.spec.replicas}/ current: ${rcMap.status.readyReplicas}"
+                          echo "----------------------------------------------------------"
+                          echo ""
+                          echo ""
+                          
+                          deployResult = (rcMap.spec.replicas.equals(rcMap.status.readyReplicas))
+
+                          return deployResult
+                      }//untilEach
+                    }//timeout
+                  }//withProject
+                }//withCluster
+              }//if
+            }//scripts
           }//steps
         }//stage
         stage('Liberar Promoção') {
@@ -473,7 +528,7 @@ pipeline {
                   }
                 }
               }
-            }
+            }//scripts
           }//steps
         }//stage
         stage('Finalizando') {

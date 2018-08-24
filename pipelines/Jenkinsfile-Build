@@ -424,7 +424,7 @@ pipeline {
             }//script
           }//steps
         }//stage
-        stage('Escalando') {
+        stage('Escalar') {
           when {
             environment name: 'REQUIRES_DEPLOYMENT', value: 'Y'
             environment name: 'REQUIRES_DIRECT_PROMOTION', value: 'N'

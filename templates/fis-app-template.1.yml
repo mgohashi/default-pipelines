@@ -1,0 +1,209 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: fis-app-template
+metadata:
+  annotations:
+    description: Fis S2I App Template
+    iconClass: icon-jboss
+    tags: java,springboot,fis
+  creationTimestamp: null
+  name: fis-app-template
+objects:
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_NAME}
+      component: ${APP_NAME}
+      project: ${APP_NAME}
+    name: ${APP_NAME}
+  spec:
+    replicas: 1
+    selector:
+      component: ${APP_NAME}
+      deploymentconfig: ${APP_NAME}
+      project: ${APP_NAME}
+    strategy:
+      resources: {}
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          component: ${APP_NAME}
+          deploymentconfig: ${APP_NAME}
+          project: ${APP_NAME}
+      spec:
+        serviceAccountName: ${SERVICE_ACCOUNT}
+        containers:
+        - env:
+          - name: APP_NAME
+            value: ${APP_NAME}
+          - name: INTROSCOPE_SERVER_NAME
+            value: ${INTROSCOPE_SERVER_NAME}
+          - name: TOKEN
+            value: ${TOKEN}
+          - name: TZ
+            value: America/Sao_Paulo
+          - name: KUBERNETES_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: JAVA_TOOL_OPTIONS
+            value: "-Duser.home=/home/jboss -Duser.name=jboss -Dspring.cloud.kubernetes.secrets.paths=/etc/secret/${APP_NAME}"
+          image: library/${APP_NAME}:latest
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 180
+          name: ${APP_NAME}
+          ports:
+          - containerPort: 8080
+            name: http
+          - containerPort: 8778
+            name: jolokia
+          - containerPort: 8081
+            name: management
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 10
+          resources:
+            limits:
+              cpu: ${CPU_LIMIT}
+            requests:
+              cpu: ${CPU_REQUEST}
+          volumeMounts:
+          - name: secret-volume
+            mountPath: /etc/secret/${APP_NAME}
+            readOnly: true
+        nodeSelector:
+          region: ${ENVIRONMENT}
+        volumes:
+        - name: secret-volume
+          secret:
+            secretName: ${APP_NAME}
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APP_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:${TAG_NAME}
+      type: ImageChange
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_NAME}
+      component: ${APP_NAME}
+      project: ${APP_NAME}
+      template: fis-custom
+    name: ${APP_NAME}
+  spec:
+    ports:
+    - name: port-1
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: port-2
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: port-3
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      component: ${APP_NAME}
+      deploymentconfig: ${APP_NAME}
+      project: ${APP_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: ${APP_NAME}
+      component: ${APP_NAME}
+      project: ${APP_NAME}
+      template: fis-custom
+      router: interno
+    name: ${APP_NAME}
+  spec:
+    host: ${APP_NAME}-${NAMESPACE}.${FQDN}
+    port:
+      targetPort: port-1
+    to:
+      kind: Service
+      name: ${APP_NAME}
+      weight: 100
+    wildcardPolicy: None
+  status:
+    ingress:
+    - conditions:
+      - lastTransitionTime: null
+        status: "True"
+        type: Admitted
+      host: ${APP_NAME}-${NAMESPACE}.${FQDN}
+      routerName: router
+      wildcardPolicy: None
+parameters:
+- description: The name assigned to the application.
+  displayName: Application Name
+  name: APP_NAME
+  required: true
+- description: Introscope Server Name
+  displayName: Introscope Server Name
+  name: INTROSCOPE_SERVER_NAME
+  required: true
+  value: DEMOPOLIS.BANESTES.SFB
+- description: Namespace in which the ImageStream is installed.
+  displayName: Image Stream Namespace
+  name: NAMESPACE
+  required: true
+  value: openshift
+- description: Environment
+  displayName: Environment
+  name: ENVIRONMENT
+  required: true
+  value: dev
+- description: Tag name
+  displayName: Tag name
+  name: TAG_NAME
+  required: true
+  value: latest
+- description: The amount of CPU to requests.
+  displayName: CPU request
+  name: CPU_REQUEST
+  required: true
+  value: "0.2"
+- description: The amount of CPU the container is limited to use.
+  displayName: CPU limit
+  name: CPU_LIMIT
+  required: true
+  value: "1.0"
+- description: Apps FQDN.
+  displayName: Apps FQDN.
+  name: FQDN
+  required: true
+  value: cloud.sfb
+- description: Service Account
+  displayName: Service Account
+  name: SERVICE_ACCOUNT
+  required: true
+- description: Token key
+  displayName: Token key
+  name: TOKEN
+  required: true
+  value: "NECESSARIO_PASSAR_O_PARAMETRO_TOKEN_NO_PIPELINE"
